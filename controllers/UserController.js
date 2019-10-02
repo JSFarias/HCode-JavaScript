@@ -5,6 +5,7 @@ class UserController{
         this.tableEl = document.getElementById(tableId);        
         this.onSubmit();
         this.onEdit();
+        this.selectAll();
     }
 
     onEdit(){
@@ -20,8 +21,6 @@ class UserController{
 
             let values = this.getValues(this.formUpdateEl);   
 
-            console.log(values);
-
             let index = this.formUpdateEl.dataset.trIndex;
 
             let tr = this.tableEl.rows[index];
@@ -35,23 +34,14 @@ class UserController{
                 if(!values.photo) result._photo = userOld._photo;
                 else result._photo = content;
             
-                tr.dataset.user = JSON.stringify(result);
-                
-                tr.innerHTML = 
-                `
-                    <td><img src="${result._photo}" alt="User Image" class="img-circle img-sm"></td>
-                    <td>${result._name}</td>
-                    <td>${result._email}</td>
-                    <td>${(result._admin) ? "Sim" : "Não"}</td>
-                    <td>${Utils.dateFormat(result._register)}</td>
-                    <td>
-                        <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                        <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
-                    </td>
-                `;
-    
-                this.addEventsTr(tr);
-    
+                let user = new User();               
+
+                user.loadFromJSON(result);
+
+                user.save();
+
+                this.getTr(user, tr);
+
                 this.updateCount();
 
                 this.formUpdateEl.reset();
@@ -65,8 +55,6 @@ class UserController{
                 console.error(e);
 
             });
-
-           
 
         });
     }
@@ -93,6 +81,7 @@ class UserController{
 
                 _this.getPhoto(_this.formCreateEl).then(function(content){
                     values.photo = content;
+                    values.save();
                     _this.addLine(values);
                     _this.formCreateEl.reset();
                     btn.disabled = false;
@@ -191,13 +180,46 @@ class UserController{
         return new User(user.name, user.gender, user.birth, user.country, user.email, user.password, user.photo, user.admin);
     };
 
+    selectAll(){
+
+        let users = this.getUsersStorage();
+
+        users.forEach(dataUser=>{
+
+            let user = new User();
+            user.loadFromJSON(dataUser);
+            this.addLine(user)
+
+        });
+
+    }
+
+    getUsersStorage() {
+
+        let users = [];
+        if (localStorage.getItem("users"))
+            users = JSON.parse(localStorage.getItem("users"));        
+        return users;
+
+    }
+
     addLine(dataUser){
 
-        let tr = document.createElement('tr');
+        let tr = this.getTr(dataUser);
+        
+        this.tableEl.appendChild(tr);
 
-        tr.dataset.user = JSON.stringify(dataUser);
+        this.updateCount();
 
-        tr.innerHTML = 
+    }
+
+    getTr(dataUser, tr = null) {
+        
+        if(tr === null) tr = document.createElement('tr');   
+
+        tr.dataset.user = JSON.stringify(dataUser);    
+
+        tr.innerHTML =
             `
                 <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
                 <td>${dataUser.name}</td>
@@ -210,17 +232,20 @@ class UserController{
                 </td>
             `;
 
-        this.addEventsTr(tr);
-    
-        this.tableEl.appendChild(tr);
+        this.addEventsTr(tr);    
 
-        this.updateCount();
+        return tr;
+
     }
 
     addEventsTr(tr) {
 
         tr.querySelector(".btn-delete").addEventListener('click', e => {
             if(confirm("Deseja realmente excliur?")){
+
+                let user = new User();
+                user.loadFromJSON(JSON.parse(tr.dataset.user));
+                user.remove();
                 tr.remove();
                 this.updateCount();
             }
@@ -253,19 +278,25 @@ class UserController{
 
             this.showPanelUpdate();
         });
+
     }
 
     showPanelCreate() {
+
         document.querySelector("#box-user-create").style.display = "block";
         document.querySelector("#box-user-update").style.display = "none";
+
     }
 
     showPanelUpdate() {
+
         document.querySelector("#box-user-create").style.display = "none";
         document.querySelector("#box-user-update").style.display = "block";
+
     }
 
     updateCount(){
+
         let numberUsers = 0;
         let numberAdmin = 0;
 
@@ -277,6 +308,6 @@ class UserController{
 
         document.querySelector("#number-users").innerHTML = numberUsers;
         document.querySelector("#number-users-admin").innerHTML = numberAdmin;
-
     }
+
 }
