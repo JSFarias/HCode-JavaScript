@@ -22,13 +22,16 @@ module.exports = (app) => {
     
     });
     route.post((req, res)=>{
-       db.insert(req.body, (err, user)=>{ 
-            if(err){
-                app.utils.error.send(err, req, res);
-            }else{
-                res.status(200).json(user); 
-            }
-       }) //{} obj json que quero salvar, função de err ou sucess
+
+        if(!app.utils.validator.user(app, req, res)) return false;
+
+        db.insert(req.body, (err, user)=>{ 
+                if(err){
+                    app.utils.error.send(err, req, res);
+                }else{
+                    res.status(200).json(user); 
+                }
+        }) //{} obj json que quero salvar, função de err ou sucess
     });
 
     let routeId = app.route('/users/:id'); 
@@ -44,6 +47,9 @@ module.exports = (app) => {
     });
 
     routeId.put((req, res)=>{
+
+        if(!app.utils.validator.user(app, req, res)) return false;
+
         db.update({_id:req.params.id}, req.body, err =>{
             if(err){
                 app.utils.error.send(err, req, res);
