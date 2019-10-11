@@ -15,7 +15,7 @@ router.post('/upload', (req, res)=>{
   });
 
   form.parse(req, (err, fields, files)=>{
-    res.json(files);
+    res.json({files});
   });
   
 });

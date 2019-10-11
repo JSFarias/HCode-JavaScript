@@ -9,22 +9,61 @@ class DropBoxController{
         this.fileNameEl = document.querySelector('.filename');
         this.fielFieldsEl = document.querySelector('#list-of-files-and-directories');
         this.startUploadTime;
+        
+        this.connectToFirebase();
+        this.db = firebase.firestore();
         this.initEvents();
+    }
+
+    connectToFirebase(){        
+
+        // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyA-8iNGs3jvzdwIBThonzP0jDBKuMT3b1k",
+        authDomain: "dropbox-clone-c75b5.firebaseapp.com",
+        databaseURL: "https://dropbox-clone-c75b5.firebaseio.com",
+        projectId: "dropbox-clone-c75b5",
+        storageBucket: "dropbox-clone-c75b5.appspot.com",
+        messagingSenderId: "687622436881",
+        appId: "1:687622436881:web:927b14b1e42aa3c414d9b0"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
     }
 
     initEvents(){
         this.btnSendFileEl.addEventListener('click', e =>{
-            console.log("SEND");
             this.inputFileEl.click();
         });
 
         this.inputFileEl.addEventListener('change', event=>{
-            console.log(event.target.files);
-            this.uploadTask(event.target.files);
+
+            this.btnSendFileEl.disabled = true;
+
+            this.uploadTask(event.target.files).then(responses =>{
+                responses.forEach(resp=>{
+                    this.getFirebaseRef().add(resp.files['input-file']);
+                });
+
+                this.uploadComplete();
+                
+            }).catch(err=>{
+                this.uploadComplete();
+                console.error(err);
+            });
             this.modalShow();
-            //this.snackModalEl.style='display:block';  
-            this.inputFileEl.value = '';
         });
+    }
+
+    uploadComplete(){
+        this.modalShow(false);
+        this.inputFileEl.value = '';
+        this.btnSendFileEl.disabled = false;
+    }
+    
+    getFirebaseRef(){
+        return this.db.collection('files');
     }
 
     uploadTask(files){ 
@@ -37,21 +76,16 @@ class DropBoxController{
                 ajax.open('POST', '/upload');
                 ajax.onload = e=>{
 
-                    this.modalShow(false);
-
                     try{
                         resolve(JSON.parse(ajax.responseText));
                     }catch(e){
                         reject(e);
                     }
 
-                    this.fielFieldsEl.appendChild(this.getFieldView(file));
+                    //this.fielFieldsEl.appendChild(this.getFieldView(file));
                     
                 };
                 ajax.onerror = e=>{
-
-                    this.modalShow(false);
-
                     reject(e);
                 };
 
@@ -89,7 +123,7 @@ class DropBoxController{
         
         this.timeLeftEl.innerHTML = this.formatTimeLeft(timeLeft);;
 
-        console.log(timeSpent, timeLeft, percent, timeLeft.toLocaleString());
+        //console.log(timeSpent, timeLeft, percent, timeLeft.toLocaleString());
     }
 
     formatTimeLeft(duration){
