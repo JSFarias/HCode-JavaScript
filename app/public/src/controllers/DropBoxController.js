@@ -13,6 +13,7 @@ class DropBoxController{
         this.connectToFirebase();
         this.db = firebase.firestore();
         this.initEvents();
+        this.readFiles();
     }
 
     connectToFirebase(){        
@@ -317,5 +318,32 @@ class DropBoxController{
             </li>
         `;
         
+    }
+
+    readFiles(){
+        this.getFirebaseRef().get().then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                // doc.data() is never undefined for query doc snapshots
+                console.log(doc.id, " => ", doc.data()); 
+            });
+        });
+        
+
+        /*this.getFirebaseRef().where("state", "==", "CA").onSnapshot(snapshot=>{
+            snapshot.docChanges().forEach(snapshotItem =>{
+                let key = snapshotItem.key;
+                let data = snapshotItem.val();
+
+                console.log(snapshotItem.doc.data());
+            });*/
+
+        /*this.getFirebaseRef().on('value', snapshot=>{
+            snapshot.forEach(snapshorItem =>{
+                let key = snapshotItem.key;
+                let data = snapshotItem.val();
+
+                console.log(key, data);
+            });
+        });*/
     }
 }
