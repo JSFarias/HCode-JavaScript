@@ -7,8 +7,10 @@ class DropBoxController{
         this.progressBarEl = document.querySelector('#progress-bar');
         this.timeLeftEl = document.querySelector('.timeleft');
         this.fileNameEl = document.querySelector('.filename');
-        this.fielFieldsEl = document.querySelector('#list-of-files-and-directories');
+        this.listFilesEl = document.querySelector('#list-of-files-and-directories');
         this.startUploadTime;
+
+        this.prevSelectedItem;
         
         this.connectToFirebase();
         this.db = firebase.firestore();
@@ -48,6 +50,7 @@ class DropBoxController{
                 });
 
                 this.uploadComplete();
+                this.readFiles();
                 
             }).catch(err=>{
                 this.uploadComplete();
@@ -143,7 +146,7 @@ class DropBoxController{
             
     }
 
-    getFieldIconView(file){
+    getFileIconView(file){
         switch(file.type){
             case 'folder':
                 return `
@@ -310,25 +313,36 @@ class DropBoxController{
         }
     }
 
-    getFieldView(file){
-        return `
-            <li>
-                ${this.getFieldIconView(file)}
-                <div class="name text-center">${file.name}</div>
-            </li>
-        `;
-        
-    }
+    getFileView(file, key){
 
-    readFiles(){
+        let li = document.createElement('li');
+
+        li.dataset.key = key;
+
+        li.innerHTML = `
+            ${this.getFileIconView(file)}
+            <div class="name text-center">${file.name}</div>
+        `
+
+        this.initEventsLi(li);
+
+        return li;
+        
+    }    
+
+    readFiles(){     
+
         this.getFirebaseRef().get().then(querySnapshot => {
+
+            this.listFilesEl.innerHTML = '' ;
+
             querySnapshot.forEach(doc => {
                 // doc.data() is never undefined for query doc snapshots
-                console.log(doc.id, " => ", doc.data()); 
+                //console.log(doc.id, " => ", doc.data()); 
+                this.listFilesEl.appendChild(this.getFileView(doc.data()), doc.id);
             });
         });
         
-
         /*this.getFirebaseRef().where("state", "==", "CA").onSnapshot(snapshot=>{
             snapshot.docChanges().forEach(snapshotItem =>{
                 let key = snapshotItem.key;
@@ -345,5 +359,75 @@ class DropBoxController{
                 console.log(key, data);
             });
         });*/
+    }
+
+    initEventsLi(li){
+        li.addEventListener('click', e=>{
+
+            if(e.shiftKey){
+                let firstLi = this.listFilesEl.querySelector('.selected');                  
+
+                if(firstLi) {
+
+                    let indexStart;              
+                    let indexEnd;
+                    let lis = li.parentElement.childNodes;
+
+                    lis.forEach((el, index)=>{
+                        if(firstLi === el) indexStart = index;
+                        if(li === el) indexEnd = index;
+                    });
+
+                    let index = [indexStart, indexEnd].sort();
+
+                    lis.forEach((el, i)=>{
+                        if(i >= index[0] && i <= index[1])
+                            el.classList.add('selected');
+                    });
+                    return true;
+                }
+            }
+
+            if(!e.ctrlKey){
+                this.listFilesEl.querySelectorAll('li.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+            }            
+
+            li.classList.toggle('selected');                        
+            
+            //my solution
+            /*
+            if(e.shiftKey){
+                if(this.prevSelectedItem){
+
+                    let filesList = this.listFilesEl.querySelectorAll('li');
+
+                    this.prevSelectedItem.classList.toggle('selected');
+
+                    let firstSelectedFound = false;
+        
+                    for(let i = 0; i < filesList.length; i++){
+        
+                        if(firstSelectedFound){
+                            if(filesList[i].classList == 'selected')
+                                break;
+                            else
+                                filesList[i].classList.toggle('selected');
+                        } else {
+                            if(filesList[i].classList == 'selected')
+                                firstSelectedFound = true;
+                        }
+                    }
+                    console.log(filesList);
+                } else {
+                    this.prevSelectedItem = li;
+                }
+            } else{
+                this.prevSelectedItem = li;
+            }
+            */
+        });
+       
     }
 }
