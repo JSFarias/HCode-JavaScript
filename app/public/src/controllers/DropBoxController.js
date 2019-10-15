@@ -2,6 +2,9 @@ class DropBoxController{
 
     constructor(){
 
+        this.currentFolder = ['main'];
+        this.currentFolderId = 'jhonatas';
+
         this.onselectionChange = new Event ('selectionchange');
 
         this.btnSendFileEl = document.querySelector('#btn-send-file');
@@ -77,6 +80,20 @@ class DropBoxController{
 //                     });
 //                 })
     initEvents(){
+
+        this.btnNewFolder.addEventListener('click', e=>{
+            let newFolderName = prompt('Nova Pasta', 'Digite o nome da pasta');
+
+            if(newFolderName){
+                this.getFirebaseRef().doc(newFolderName).set({
+                    name: newFolderName,
+                    type: 'folder',
+                    path: this.currentFolder.join('/')
+                });
+                this.readFiles();
+            }            
+
+        });
 
         this.btnRename.addEventListener('click', e=>{
             let li = this.getSelection()[0];
@@ -175,7 +192,7 @@ class DropBoxController{
     }
     
     getFirebaseRef(){
-        return this.db.collection('files');
+        return this.db.collection(this.currentFolderId);
     }
 
     uploadTask(files){ 
