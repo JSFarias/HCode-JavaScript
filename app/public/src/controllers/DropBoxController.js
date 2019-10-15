@@ -1,6 +1,9 @@
 class DropBoxController{
 
     constructor(){
+
+        this.onselectionChange = new Event ('selectionchange');
+
         this.btnSendFileEl = document.querySelector('#btn-send-file');
         this.inputFileEl = document.querySelector('#files');
         this.snackModalEl = document.querySelector('#react-snackbar-root');
@@ -9,6 +12,10 @@ class DropBoxController{
         this.fileNameEl = document.querySelector('.filename');
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
         this.startUploadTime;
+
+        this.btnNewFolder = document.querySelector('#btn-new-folder');
+        this.btnRename = document.querySelector('#btn-rename');
+        this.btnDelete = document.querySelector('#btn-delete');
 
         this.prevSelectedItem;
         
@@ -21,21 +28,122 @@ class DropBoxController{
     connectToFirebase(){        
 
         // Your web app's Firebase configuration
-    var firebaseConfig = {
-        apiKey: "AIzaSyA-8iNGs3jvzdwIBThonzP0jDBKuMT3b1k",
-        authDomain: "dropbox-clone-c75b5.firebaseapp.com",
-        databaseURL: "https://dropbox-clone-c75b5.firebaseio.com",
-        projectId: "dropbox-clone-c75b5",
-        storageBucket: "dropbox-clone-c75b5.appspot.com",
-        messagingSenderId: "687622436881",
-        appId: "1:687622436881:web:927b14b1e42aa3c414d9b0"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+        var firebaseConfig = {
+            apiKey: "AIzaSyA-8iNGs3jvzdwIBThonzP0jDBKuMT3b1k",
+            authDomain: "dropbox-clone-c75b5.firebaseapp.com",
+            databaseURL: "https://dropbox-clone-c75b5.firebaseio.com",
+            projectId: "dropbox-clone-c75b5",
+            storageBucket: "dropbox-clone-c75b5.appspot.com",
+            messagingSenderId: "687622436881",
+            appId: "1:687622436881:web:927b14b1e42aa3c414d9b0"
+        }    
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
 
     }
 
+    getSelection(){
+
+        return this.listFilesEl.querySelectorAll('.selected');
+    }
+
+    removeTask(){       
+
+        let promises = [];
+
+        this.getSelection().forEach(li =>{
+
+            let file = JSON.parse(li.dataset.file);
+            let key = li.dataset.key;            
+
+            let formData = new FormData();
+            formData.append('path', file.path);
+            formData.append('key', key);
+
+            promises.push(this.ajax('/file', 'DELETE', formData));
+
+        });
+
+        return Promise.all(promises);
+
+    }
+// new Promise((resolve, reject)=>{
+//                     this.getFirebaseRef().doc(li.dataset.key).delete().then(e=>{
+//                         resolve();
+//                         console.log('sucess');
+//                     }).catch(err=>{
+//                         reject(e);
+//                         console.log(`error: ${err}`);
+//                     });
+//                 })
     initEvents(){
+
+        this.btnRename.addEventListener('click', e=>{
+            let li = this.getSelection()[0];
+            let file = JSON.parse(li.dataset.file);            
+
+            let name = prompt('Renomear o arquivo', file.name);
+
+            if(name){
+
+                this.getFirebaseRef().doc(li.dataset.key).update({
+                    name: name
+                })
+                .then(doc=>{
+                    this.readFiles();
+                    console.log('sucess');
+                }).catch(err=>{
+                    console.error(err);
+                });
+            }
+        });        
+
+        this.btnDelete.addEventListener('click', e=>{
+            if(confirm("Deseja realmente excliur?")){
+
+                this.removeTask().then(responses=>{
+
+                    responses.forEach(response=>{
+
+                        if(response.fields.key){
+
+                            this.getFirebaseRef().doc(response.fields.key).delete().then(doc=>{
+                                this.readFiles();
+                                console.log(`Sucess: ${response.fields.key}`);
+                            }).catch(err=>{
+                                console.log(`Error: ${err}`);
+                            });
+
+                        }
+
+                    });
+
+                }).catch(err=>{
+                    console.log(err);
+                });                
+            }
+        });
+
+        this.listFilesEl.addEventListener('selectionchange', e =>{
+            
+         switch(this.getSelection().length){
+            case 0:                
+                this.btnDelete.style.display = 'none';
+                this.btnRename.style.display = 'none';
+            break;
+                
+            case 1:                
+                this.btnDelete.style.display = 'block';
+                this.btnRename.style.display = 'block';
+            break;
+
+            default:                
+                this.btnDelete.style.display = 'block'; 
+                this.btnRename.style.display = 'none';
+         }
+
+        });
+
         this.btnSendFileEl.addEventListener('click', e =>{
             this.inputFileEl.click();
         });
@@ -75,41 +183,51 @@ class DropBoxController{
         let promises = [];
 
         [...files].forEach(file=>{ //files ñ é um array, mas sim uma coleção, por isso usamos spread [...files]
-            promises.push(new Promise((resolve, reject)=>{
-                let ajax = new XMLHttpRequest();
-                ajax.open('POST', '/upload');
-                ajax.onload = e=>{
 
-                    try{
-                        resolve(JSON.parse(ajax.responseText));
-                    }catch(e){
-                        reject(e);
-                    }
+            let formData = new FormData()
+            formData.append('input-file', file);
 
-                    //this.fielFieldsEl.appendChild(this.getFieldView(file));
-                    
-                };
-                ajax.onerror = e=>{
-                    reject(e);
-                };
+            promises.push(this.ajax('/upload', 'POST', formData, ()=>{
 
-                this.fileNameEl.textContent = file.textContent;
-                
-                ajax.upload.onprogress = e=>{
-                    this.uploadProgress(e, file);
-                };
+                this.uploadProgress(event, file);
 
-                let formData = new FormData();
-
-                formData.append('input-file', file);
+            }, ()=>{
 
                 this.startUploadTime = Date.now();
 
-                ajax.send(formData);
             }));
+            
         });
 
         return Promise.all(promises);
+    }
+
+    ajax(url, method = 'GET', formData = new FormData(), onprogress = function(){}, onloadstart = function(){}) {
+
+        return new Promise((resolve, reject)=>{
+            let ajax = new XMLHttpRequest();
+            ajax.open(method, url);
+            ajax.onload = e => {
+                try {
+                    resolve(JSON.parse(ajax.responseText));
+                }
+                catch (e) {
+                    reject(e);
+                }
+            };
+            ajax.onerror = e => {
+                reject(e);
+            };
+            
+            //this.fileNameEl.textContent = file.textContent;
+
+            ajax.upload.onprogress = onprogress;
+            
+            onloadstart();
+
+            ajax.send(formData);
+        });
+        
     }
 
     modalShow(show = true){
@@ -270,6 +388,7 @@ class DropBoxController{
 
             case 'video/mp4':
             case 'video/quicktime':
+            case 'video/wmv':
                 return `
                     <svg width="160" height="160" viewBox="0 0 160 160" class="mc-icon-template-content tile__preview tile__preview--icon">
                         <title>content-video-large</title>
@@ -318,6 +437,7 @@ class DropBoxController{
         let li = document.createElement('li');
 
         li.dataset.key = key;
+        li.dataset.file = JSON.stringify(file);
 
         li.innerHTML = `
             ${this.getFileIconView(file)}
@@ -339,7 +459,7 @@ class DropBoxController{
             querySnapshot.forEach(doc => {
                 // doc.data() is never undefined for query doc snapshots
                 //console.log(doc.id, " => ", doc.data()); 
-                this.listFilesEl.appendChild(this.getFileView(doc.data()), doc.id);
+                this.listFilesEl.appendChild(this.getFileView(doc.data(), doc.id));
             });
         });
         
@@ -361,10 +481,12 @@ class DropBoxController{
         });*/
     }
 
-    initEventsLi(li){
-        li.addEventListener('click', e=>{
+    initEventsLi(li){        
+
+        li.addEventListener('click', e=>{            
 
             if(e.shiftKey){
+
                 let firstLi = this.listFilesEl.querySelector('.selected');                  
 
                 if(firstLi) {
@@ -384,6 +506,9 @@ class DropBoxController{
                         if(i >= index[0] && i <= index[1])
                             el.classList.add('selected');
                     });
+
+                    this.listFilesEl.dispatchEvent(this.onselectionChange);
+
                     return true;
                 }
             }
@@ -394,7 +519,9 @@ class DropBoxController{
                 });
             }            
 
-            li.classList.toggle('selected');                        
+            li.classList.toggle('selected');          
+            
+            this.listFilesEl.dispatchEvent(this.onselectionChange);
             
             //my solution
             /*
