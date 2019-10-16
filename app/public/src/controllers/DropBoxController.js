@@ -4,8 +4,11 @@ class DropBoxController{
 
         this.currentFolder = ['main'];
         this.pathFunctions = ["this.db.collection('main')"];
+        this.pathBtns;
 
         this.onselectionChange = new Event ('selectionchange');
+
+        this.navEl = document.querySelector('#browse-location');
 
         this.btnSendFileEl = document.querySelector('#btn-send-file');
         this.inputFileEl = document.querySelector('#files');
@@ -82,7 +85,7 @@ class DropBoxController{
     initEvents(){
 
         this.btnNewFolder.addEventListener('click', e=>{
-            let newFolderName = prompt('Nova Pasta', 'Digite o nome da pasta');
+            let newFolderName = prompt('Digite o nome da pasta', 'Nova Pasta');
 
             if(newFolderName){
                 this.getFirebaseRef().doc(newFolderName).set({
@@ -503,17 +506,58 @@ class DropBoxController{
     }
 
     openFolder(){
+
+        this.navEl.innerHTML  ='';
+
+        this.currentFolder.forEach(folder=>{
+            let button = document.createElement('button')
+            button = `
+                <span class="breadcrumb-segment__wrapper">
+                    <span>
+                        <button name="${folder}" type="button" class="btn btn-link  btn-sm " style="float: left;">${folder.toUpperCase()}</button>
+                    </span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" class="mc-icon-template-stateless" style="top: 4px; position: relative;">
+                        <title>arrow-right</title>
+                        <path d="M10.414 7.05l4.95 4.95-4.95 4.95L9 15.534 12.536 12 9 8.464z" fill="#637282" fill-rule="evenodd"></path>
+                    </svg>
+                </span>
+            `;      
+            
+            this.navEl.innerHTML += button;
+
+            let btns = this.navEl.querySelectorAll('button');
+
+            btns.forEach((btn,index)=>{
+                btn.addEventListener('click', e=>{
+
+                    console.log(this.currentFolder.length,' - ', this.pathFunctions.length);
+
+                   /* for(let i = index+1; i < this.currentFolder.length; i++){
+                        this.currentFolder.splice(index, 1);
+                        this.pathFunctions.splice(index, 1);
+                    }*/
+
+                    for(let i = this.currentFolder.length-1; i > index; i--){
+                        this.currentFolder.pop();
+                        this.pathFunctions.pop();
+                    }
+
+                    this.openFolder();
+
+                    console.log(btn.name, index);
+                });
+            }); 
+        });
         
         this.readFiles();
     }
 
     initEventsLi(li){ 
-
         li.addEventListener('dblclick', e=>{
 
             let file = JSON.parse(li.dataset.file);
 
-            console.log(file);
+          //  console.log(file);
 
             switch(file.type){
                 case 'folder':
