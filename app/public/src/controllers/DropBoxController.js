@@ -3,7 +3,7 @@ class DropBoxController{
     constructor(){
 
         this.currentFolder = ['main'];
-        this.currentFolderId = 'jhonatas';
+        this.pathFunctions = ["this.db.collection('main')"];
 
         this.onselectionChange = new Event ('selectionchange');
 
@@ -25,7 +25,7 @@ class DropBoxController{
         this.connectToFirebase();
         this.db = firebase.firestore();
         this.initEvents();
-        this.readFiles();
+        this.openFolder();
     }
 
     connectToFirebase(){        
@@ -191,8 +191,11 @@ class DropBoxController{
         this.btnSendFileEl.disabled = false;
     }
     
-    getFirebaseRef(){
-        return this.db.collection(this.currentFolderId);
+    getFirebaseRef(pathMethods){
+
+        let fullPath = this.pathFunctions.join('.');
+        return eval(fullPath);
+
     }
 
     uploadTask(files){ 
@@ -469,6 +472,7 @@ class DropBoxController{
 
     readFiles(){     
 
+
         this.getFirebaseRef().get().then(querySnapshot => {
 
             this.listFilesEl.innerHTML = '' ;
@@ -498,7 +502,31 @@ class DropBoxController{
         });*/
     }
 
-    initEventsLi(li){        
+    openFolder(){
+        
+        this.readFiles();
+    }
+
+    initEventsLi(li){ 
+
+        li.addEventListener('dblclick', e=>{
+
+            let file = JSON.parse(li.dataset.file);
+
+            console.log(file);
+
+            switch(file.type){
+                case 'folder':
+                this.currentFolder.push(file.name);
+                this.pathFunctions.push("doc('"+file.name+"').collection('"+file.name+"')");
+                this.openFolder();
+                break;
+
+                default:
+                    window.open('/file?path='+file.path);
+            }
+
+        });     
 
         li.addEventListener('click', e=>{            
 
