@@ -54,6 +54,15 @@ class DropBoxController{
         return this.listFilesEl.querySelectorAll('.selected');
     }
 
+    removeFolderTask(ref, name){
+
+        return new Promise((resolve, reject)=>{
+            let folderRef = this.getFirebaseRef(ref + '/' + name);
+            console.log('folderRef', folderRef);
+        });
+
+    }
+
     removeTask(){       
 
         let promises = [];
@@ -61,19 +70,64 @@ class DropBoxController{
         this.getSelection().forEach(li =>{
 
             let file = JSON.parse(li.dataset.file);
-            let key = li.dataset.key;            
+            let key = li.dataset.key;  
 
+            promises.push(new Promise((resolve, reject)=>{
+
+                if(file.type === 'folder'){
+
+                    this.removeFolderTask(this.currentFolder.join('/'), file.name).then(()=>{
+
+                        resolve({
+                            fields: {
+                                key
+                            }
+                        });
+
+                    }).catch(err=>{
+
+                        reject(error);
+
+                    });;
+
+                } else if (file.type){
+                
+                    this.removeFile(this.currentFolder.join('/'), file.name).then(()=>{
+
+                        resolve({
+                            fields: {
+                                key
+                            }
+                        });
+
+                    }).catch(err=>{
+
+                        reject(error);
+
+                    });
+                }
+                
+            }));
+
+            /* //envio o method DELETE via ajax para o servidor
             let formData = new FormData();
             formData.append('path', file.path);
             formData.append('key', key);
 
             promises.push(this.ajax('/file', 'DELETE', formData));
+            */
 
         });
 
         return Promise.all(promises);
 
     }
+
+    removeFile(ref, name){//  file, resolve, key, reject) {
+        let deleteRef = firebase.storage().ref(ref).child(name);
+        return deleteRef.delete();
+    }
+
 // new Promise((resolve, reject)=>{
 //     this.getFirebaseRef().doc(li.dataset.key).delete().then(e=>{
 //         resolve();
