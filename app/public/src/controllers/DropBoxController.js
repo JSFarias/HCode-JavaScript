@@ -1,4 +1,3 @@
-
 class DropBoxController{
 
     constructor(){
@@ -57,8 +56,30 @@ class DropBoxController{
     removeFolderTask(ref, name){
 
         return new Promise((resolve, reject)=>{
-            let folderRef = this.getFirebaseRef(ref + '/' + name);
-            console.log('folderRef', folderRef);
+
+            let fwdPath = ref + ".doc('"+name+"').collection('"+name+"')";
+
+            console.log(fwdPath);
+
+            let folderRef = this.getFirebaseRef(fwdPath);
+            
+            folderRef.get().then(querySnapshot => {
+    
+                querySnapshot.forEach(doc => {
+                    
+                    if(doc.data().type === 'folder'){
+                        this.removeFolderTask(fwdPath, doc.data().name);
+                        console.log("another folder", doc.data().name);
+                    }else{
+                        console.log('no subfolder???');
+                    }
+                    
+                });
+            }).catch(err=>{
+                reject(err);
+            });
+
+            
         });
 
     }
@@ -75,8 +96,8 @@ class DropBoxController{
             promises.push(new Promise((resolve, reject)=>{
 
                 if(file.type === 'folder'){
-
-                    this.removeFolderTask(this.currentFolder.join('/'), file.name).then(()=>{
+                    console.log('folder');
+                    this.removeFolderTask(this.pathFunctions, file.name).then(()=>{
 
                         resolve({
                             fields: {
@@ -84,7 +105,7 @@ class DropBoxController{
                             }
                         });
 
-                    }).catch(err=>{
+                    }).catch(error=>{
 
                         reject(error);
 
@@ -125,6 +146,7 @@ class DropBoxController{
 
     removeFile(ref, name){//  file, resolve, key, reject) {
         let deleteRef = firebase.storage().ref(ref).child(name);
+        console.log(deleteRef);
         return deleteRef.delete();
     }
 
@@ -265,9 +287,10 @@ class DropBoxController{
         this.btnSendFileEl.disabled = false;
     }
     
-    getFirebaseRef(pathMethods){
-
-        let fullPath = this.pathFunctions.join('.');
+    getFirebaseRef(builtPathFunctions = this.pathFunctions.join('.')){
+        console.log(this.pathFunctions);
+        console.log(builtPathFunctions);
+        let fullPath = builtPathFunctions;
         return eval(fullPath);
 
     }
