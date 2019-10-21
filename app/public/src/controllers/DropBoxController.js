@@ -25,10 +25,30 @@ class DropBoxController{
 
         this.prevSelectedItem;
         
-        this.connectToFirebase();
+        this.connectToFirebase(); 
+        this.auth = firebase.auth();
         this.db = firebase.firestore();
+        this.functions = firebase.functions();
+
         this.initEvents();
-        this.openFolder();
+        this.openFolder();        
+
+        /**
+         * Call the 'recursiveDelete' callable function with a path to initiate
+         * a server-side delete.
+         */
+        // this.recursiveDel = function deleteAtPath(path) {
+        //     var deleteFn = firebase.functions().httpsCallable('recursiveDelete');
+        //     deleteFn({ path: path })
+        //         .then(function(result) {
+        //             logMessage('Delete success: ' + JSON.stringify(result));
+        //         })
+        //         .catch(function(err) {
+        //             logMessage('Delete failed, see console,');
+        //             console.warn(err);
+        //         });
+        // }
+        
     }
 
     connectToFirebase(){        
@@ -46,14 +66,18 @@ class DropBoxController{
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
+        this.signInAsAdmin();
+
     }
 
     getSelection(){
 
         return this.listFilesEl.querySelectorAll('.selected');
-    }
+    }    
 
-    removeFolderTask(dbRef, storageRef, folderNameHierachy, folderName = ''){
+    removeFolderTask(dbRef, storageRef, folderNameHierachy){
+
+        let promises = [];
 
         return new Promise((resolve, reject)=>{
 
@@ -68,41 +92,65 @@ class DropBoxController{
                     let data = doc.data();
                     data.key = doc.id;
                     data.funcPath = dbFwdRef;
-
-                    console.log(data);
                     
                     if(data.type === 'folder'){
                         console.log('has subfolder');
-                        this.removeFolderTask(dbFwdRef, storageRef+'/'+data.name, data.name).then(()=>{
+                        console.log('db', data.funcPath, data.key);
+                        console.log('storage', dbFwdRef, storageRef+'/'+data.name, data.name);
 
-                            resolve({
-                                fields: {
-                                    key,                                    
-                                }
-                            });
-    
+                        //this.removeFolderTask(dbFwdRef, storageRef+'/'+data.name, data.name);                      
+
+                        
+
+                       /* this.getFirebaseRef(data.funcPath).doc(data.key).delete().then(doc=>{
+                            this.readFiles();
+                            console.log(`Sucess: ${data.key}`);
                         }).catch(err=>{
+                            console.log(`Error: ${err}`);
+                        });*/
+                        // this.removeFolderTask(dbFwdRef, storageRef+'/'+data.name, data.name).then(()=>{
+
+                        //   /*  resolve({
+                        //         fields: {
+                        //             key: data.type,                                    
+                        //         }
+                        //     });*/
     
-                            reject(err);
+                        // }).catch(err=>{
     
-                        });
+                        //     reject(err);
+    
+                        // });
 
                     }else if(data.type){
-                        console.log('has subfile');
-                        this.removeFile(storageRef+'/'+folderNameHierachy, data.name).then(()=>{
 
-                            resolve({
-                                fields: {
-                                    key: data.key,
-                                    funcPath: data.funcPath
-                                }
-                            });
-    
+                        console.log('has subfile');
+                        console.log('db', data.funcPath, data.key);
+                        console.log('storage', storageRef+'/'+folderNameHierachy, data.name, 'DELETED');
+
+                     /*   this.getFirebaseRef(data.funcPath).doc(data.key).delete().then(doc=>{
+                            this.readFiles();
+                            console.log(`Sucess: ${data.key}`);
                         }).catch(err=>{
+                            console.log(`Error: ${err}`);
+                        });*/
+                        
+                        // this.removeFile(storageRef+'/'+folderNameHierachy, data.name).then(()=>{
+
+                        //     console.log('has key', data.key, 'funcPath ', data.funcPath, 'DELETED');                            
+
+                        //     /*resolve({
+                        //         fields: {
+                        //             key: data.key,
+                        //             funcPath: data.funcPath
+                        //         }
+                        //     });*/
     
-                            reject(err);
+                        // }).catch(err=>{
     
-                        });
+                        //     reject(err);
+    
+                        // });
 
                     }
                     
@@ -117,6 +165,29 @@ class DropBoxController{
 
     }
 
+    /**
+    * Call the 'mintAdminToken' callable function to get a custom token that
+    * makes us an admin user, then sign in.
+    */
+    signInAsAdmin() {
+        var tokenFn = firebase.functions().httpsCallable('mintAdminToken');
+        tokenFn({ uid: 'user1234' }).then(function (res) {
+            return firebase.auth().signInWithCustomToken(res.data.token);
+        });
+    }       
+    
+    deleteAtPath(path) {
+        var deleteFn = this.functions.httpsCallable('recursiveDelete');
+        deleteFn({ path: path })
+            .then(function(result) {
+                logMessage('Delete success: ' + JSON.stringify(result));
+            })
+            .catch(function(err) {
+                logMessage('Delete failed, see console,');
+                console.warn(err);
+            });
+    }
+    
     removeTask(){       
 
         let promises = [];
@@ -124,47 +195,49 @@ class DropBoxController{
         this.getSelection().forEach(li =>{
 
             let file = JSON.parse(li.dataset.file);
-            let key = li.dataset.key;
-            
+            let key = li.dataset.key;            
 
             promises.push(new Promise((resolve, reject)=>{
 
                 if(file.type === 'folder'){
 
-                    this.removeFolderTask(this.functionsPath.join('.'), this.currentFolder.join('/'), file.name, file.name).then(d=>{
+                    console.log('file', file, 'removeTask func', file.type, 'path to delete', file.path, 'functionsPath', this.functionsPath.join('.'));
 
-                        resolve(                            
-                            {
-                            fields: {
-                                key: d.fields.key,
-                                funcPath: d.fields.funcPath
-                            }
-                        });
+                    // [START call_delete_function]
+                        /**
+                         * Call the 'recursiveDelete' callable function with a path to initiate
+                         * a server-side delete.
+                         */
 
-                    }).catch(err=>{
-
-                        reject(err);
-
-                    });;
+                         let path = this.functionsPath.join('.');
+                        this.deleteAtPath(path);
+                        // [END call_delete_function]
                     
+                    //this.removeFolderTask(this.functionsPath.join('.'), this.currentFolder.join('/'), file.name);                    
 
-                } else if (file.type){
+                } 
                 
-                    this.removeFile(this.currentFolder.join('/'), file.name).then(()=>{
-                        console.log('flag');
-                        resolve({
-                            fields: {
-                                key,
-                                funcPath: this.functionsPath.join('.')
-                            }
-                        });
+                resolve({
+                    fields:{
+                        key
+                    }
+                });
 
-                    }).catch(err=>{
+                console.log('removeTask doc', file.type);
+                // this.removeFile(this.currentFolder.join('/'), file.name).then(()=>{
+                //     console.log('flag');
+                //     resolve({
+                //         fields: {
+                //             key,
+                //             funcPath: this.functionsPath.join('.')
+                //         }
+                //     });
 
-                        reject(err);
+                // }).catch(err=>{
 
-                    });
-                }
+                //     reject(err);
+
+                // });
                 
             }));
 
@@ -237,17 +310,21 @@ class DropBoxController{
 
                 this.removeTask().then(responses=>{
 
-                    responses.forEach(response=>{
-                        console.log('path', response.fields);
+                    console.log('btnDelete RESPONSES', responses, responses.length);
 
-                        if(response.fields.key){
-                            console.log('has key', response.fields.key, 'funcPath ', response.fields.funcPath);
-                            this.getFirebaseRef(response.fields.funcPath).doc(response.fields.key).delete().then(doc=>{
-                                this.readFiles();
-                                console.log(`Sucess: ${response.fields.key}`);
-                            }).catch(err=>{
-                                console.log(`Error: ${err}`);
-                            });
+                    responses.forEach(resp=>{ 
+
+                        console.log('resp', resp);
+
+                        if(resp.fields.key){                            
+
+                            console.log('has key', resp.fields.key, 'funcPath ', resp.fields.funcPath, 'type ', resp.fields.type);
+                            // this.getFirebaseRef(resp.fields.funcPath).doc(resp.fields.key).delete().then(()=>{
+                            //     this.readFiles();
+                            //     console.log(`Sucess - doc: ${resp.fields.key}`);
+                            // }).catch(err=>{
+                            //     console.log(`Error - doc: ${err}`);
+                            // });
 
                         }
 
