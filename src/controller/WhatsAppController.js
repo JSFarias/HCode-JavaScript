@@ -135,25 +135,63 @@ class WhatsAppController{
             });   
         })     
         
-        //start attach btn
+        //start attach btns
         this.el.btnAttach.on('click', e=>{
             e.stopPropagation();
             this.el.menuAttach.addClass('open');
             document.addEventListener('click', this.closeMenuAttach.bind(this));
         });  
 
+        //image
         this.el.btnAttachPhoto.on('click', e=>{
             this.el.inputPhoto.click();
         });
 
+        this.el.inputPhoto.on('change', e=>{
+            console.log(this.el.inputPhoto.files);
+
+            [...this.el.inputPhoto.files].forEach(file=>{
+                console.log(file.name);
+            });
+        });        
+
+        //camera
         this.el.btnAttachCamera.on('click', e=>{
-            console.log('camera');
+            this.closeAllMainPanel();
+            this.el.panelCamera.addClass('open');
+            this.el.panelCamera.css({
+                height: 'calc(100% - 120px)'
+            })
         });
 
+        this.el.btnClosePanelCamera.on('click', e=>{
+            this.closeAllMainPanel();
+            this.el.panelMessagesContainer.show();
+        });
+
+        this.el.btnTakePicture.on('click', e=>{
+            console.log('take pic');
+        });
+
+        //document
         this.el.btnAttachDocument.on('click', e=>{
-            this.el.inputDocument.click();
+            this.closeAllMainPanel();
+            this.el.panelDocumentPreview.addClass('open');
+            this.el.panelDocumentPreview.css({
+                height: 'calc(100% - 120px)'
+            })
         });
 
+        this.el.btnClosePanelDocumentPreview.on('click', e=>{
+            this.closeAllMainPanel();
+            this.el.panelMessagesContainer.show();            
+        });
+
+        this.el.btnSendDocument.on('click', e=>{
+            console.log('send doc');
+        });
+
+        //contact
         this.el.btnAttachContact.on('click', e=>{
             this.el.modalContacts.show();
         });
@@ -163,6 +201,12 @@ class WhatsAppController{
         });
 
 
+    }
+
+    closeAllMainPanel(){
+        this.el.panelMessagesContainer.hide();
+        this.el.panelCamera.removeClass('open');
+        this.el.panelDocumentPreview.removeClass('open');
     }
 
     closeMenuAttach(el){
