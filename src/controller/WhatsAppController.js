@@ -53,6 +53,23 @@ class WhatsAppController{
         Element.prototype.hasClass = function(name){
             return this.classList.contains(name);
         }
+
+        HTMLFormElement.prototype.getForm = function(){
+            return new FormData(this);
+        };
+
+        HTMLFormElement.prototype.toJSON = function(){
+            let json = {};
+
+            this.getForm().forEach((value, key)=>{
+
+                json[key] = value;
+
+            });
+
+            return json;
+        };
+
     }
 
     loadElements(){
@@ -63,6 +80,8 @@ class WhatsAppController{
     }
 
     initEvents(){
+
+        //start edit profile
         this.el.myPhoto.on('click', e=>{
             this.closeAllLeftPanel();
             this.el.panelEditProfile.show();
@@ -73,23 +92,7 @@ class WhatsAppController{
             this.el.panelEditProfile.removeClass('open');
         });
 
-        //start new contact
-        this.el.btnNewContact.on('click', e=>{
-            this.closeAllLeftPanel();
-            this.el.panelAddContact.show();
-            this.openPanel(this.el.panelAddContact);
-        });
-
-        this.el.btnClosePanelAddContact.on('click', e=>{
-            this.el.panelAddContact.removeClass('open');
-        });
-
-        this.el.formPanelAddContact.on('click', e=>{
-            let formData = new FormData();
-            
-        });
-        //end new contact
-
+        
         this.el.photoContainerEditProfile.on('click', e=>{
             this.el.inputProfilePhoto.click();
         });
@@ -104,6 +107,67 @@ class WhatsAppController{
         this.el.btnSavePanelEditProfile.on('click', e=>{
             console.log(this.el.inputNamePanelEditProfile.innerHTML);
         });
+
+        //start new contact
+        this.el.btnNewContact.on('click', e=>{
+            this.closeAllLeftPanel();
+            this.el.panelAddContact.show();
+            this.openPanel(this.el.panelAddContact);
+        });
+
+        this.el.btnClosePanelAddContact.on('click', e=>{
+            this.el.panelAddContact.removeClass('open');
+        });
+
+        this.el.formPanelAddContact.on('submit', e=>{
+            e.preventDefault();
+            this.el.formPanelAddContact.toJson();
+
+        });
+
+        //start contact msg list
+        this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach((item, index)=>{
+            item.on('click', e=>{
+                this.el.home.hide();
+                this.el.main.css({
+                    display: 'flex'
+                })                
+            });   
+        })     
+        
+        //start attach btn
+        this.el.btnAttach.on('click', e=>{
+            e.stopPropagation();
+            this.el.menuAttach.addClass('open');
+            document.addEventListener('click', this.closeMenuAttach.bind(this));
+        });  
+
+        this.el.btnAttachPhoto.on('click', e=>{
+            this.el.inputPhoto.click();
+        });
+
+        this.el.btnAttachCamera.on('click', e=>{
+            console.log('camera');
+        });
+
+        this.el.btnAttachDocument.on('click', e=>{
+            this.el.inputDocument.click();
+        });
+
+        this.el.btnAttachContact.on('click', e=>{
+            this.el.modalContacts.show();
+        });
+
+        this.el.btnCloseModalContacts.on('click', e=>{
+            this.el.modalContacts.hide();
+        });
+
+
+    }
+
+    closeMenuAttach(el){
+        document.removeEventListener('click', this.closeMenuAttach);
+        this.el.menuAttach.removeClass('open');
     }
 
     closeAllLeftPanel(){
@@ -114,7 +178,7 @@ class WhatsAppController{
     openPanel(el){
         setTimeout(function(){
             el.addClass('open');
-        }, 200)        
+        }, 300)        
     }
 }
 
