@@ -16065,7 +16065,7 @@ html[dir=rtl] ._2ICcy:after{
      height: 10%;
 }
  .panel-down {
-     transform: translateY(350px);
+     transform: translateY(450px);
      -webkit-transition: 0.3s ease-in-out;
      -moz-transition: 0.3s ease-in-out;
      -o-transition: 0.3s ease-in-out;
@@ -16135,4 +16135,12 @@ html[dir=rtl] ._2ICcy:after{
 }
 #main {
     display:none;
+}
+._2oKVP{
+    display: flex;
+    justify-content: center;
+}
+#picture-camera{
+    height: 100%;
+    width: auto;
 }

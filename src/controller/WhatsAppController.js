@@ -1,5 +1,7 @@
 import {Format} from './../util/Format';
 import {CameraController} from './CameraController';
+import {MicrophoneController} from './MicrophoneController';
+import {DocumentPreviewController} from './DocumentPreviewController';
 
 export class WhatsAppController{
     constructor(){
@@ -165,9 +167,10 @@ export class WhatsAppController{
         this.el.btnAttachCamera.on('click', e=>{
             this.closeAllMainPanel();
             this.el.panelCamera.addClass('open');
+
             this.el.panelCamera.css({
                 height: 'calc(100% - 120px)'
-            })
+            });
 
             this._camera = new CameraController(this.el.videoCamera);
         });
@@ -175,11 +178,41 @@ export class WhatsAppController{
         this.el.btnClosePanelCamera.on('click', e=>{            
             this.closeAllMainPanel();
             this.el.panelMessagesContainer.show();
-            this._camera.TurnOff();
+            this._camera.Stop();
+            this.el.btnReshootPanelCamera.click();
         });
 
         this.el.btnTakePicture.on('click', e=>{
-            console.log('take pic');
+
+            this.el.panelCamera.css({
+                height: 'calc(100% - 120px)'
+            });
+
+            let dataUrl = this._camera.TakePicture(); 
+            this.el.pictureCamera.src = dataUrl;
+
+            this.el.btnReshootPanelCamera.show();
+            this.el.pictureCamera.show();
+            this.el.videoCamera.hide();
+
+            this.el.containerSendPicture.show();
+            this.el.containerTakePicture.hide();
+            
+        });
+
+        this.el.btnReshootPanelCamera.on('click', e=>{
+
+            this.el.btnReshootPanelCamera.hide();
+            this.el.pictureCamera.hide();
+            this.el.videoCamera.show();
+
+            this.el.containerSendPicture.hide();
+            this.el.containerTakePicture.show();
+
+        });
+
+        this.el.btnSendPicture.on('click', e=>{
+            console.log(this.el.pictureCamera.src);
         });
 
         //document
@@ -189,6 +222,60 @@ export class WhatsAppController{
             this.el.panelDocumentPreview.css({
                 height: 'calc(100% - 120px)'
             })
+
+            this.el.inputDocument.click();
+        });
+
+        this.el.inputDocument.on('change', e=>{
+            if(this.el.inputDocument.files.length){
+                let file = this.el.inputDocument.files[0];
+
+                this.el.panelDocumentPreview.css({
+                    height: '1px'
+                })                
+
+                this._documentPreviewController = new DocumentPreviewController(file);
+                this._documentPreviewController
+                .getPreviewData().then(result=>{
+                    
+                    this.el.panelDocumentPreview.css({
+                        height: 'calc(100% - 120px)'
+                    })
+
+                    this.el.imgPanelDocumentPreview.src = result.src;
+                    this.el.infoPanelDocumentPreview.innerHTML = result.info;
+                    this.el.imagePanelDocumentPreview.show();
+                    this.el.filePanelDocumentPreview.hide();                    
+
+                }).catch(err=>{
+
+                    this.el.panelDocumentPreview.css({
+                        height: 'calc(100% - 120px)'
+                    })                  
+
+                    switch(file.type){
+                        case 'text/html':
+                        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                            this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-doc';
+                        break;
+                        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                            this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-xls';
+                        break;
+                        case 'application/vnd.ms-excel':
+                            this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-xls';
+                        break;
+                        default:
+                            this.el.iconPanelDocumentPreview.className = 'jcxhw icon-doc-generic';
+                        break;
+                    }
+
+                    this.el.imagePanelDocumentPreview.hide();
+                    this.el.filePanelDocumentPreview.show();   
+                    this.el.filenamePanelDocumentPreview.innerHTML = file.name; 
+
+                });
+
+            }
         });
 
         this.el.btnClosePanelDocumentPreview.on('click', e=>{
@@ -215,15 +302,19 @@ export class WhatsAppController{
             this.el.recordMicrophone.show();
 
             this.startRecordMicrophoneTime(); 
+
+            this._microphoneController = new MicrophoneController();
             
         });
 
         this.el.btnCancelMicrophone.on('click', e=>{           
             this.closeRecordMicrophone();
+            this._microphoneController.Stop();
         });
 
         this.el.btnFinishMicrophone.on('click', e=>{            
             this.closeRecordMicrophone();
+            this._microphoneController.SendAudio();
         });
 
         this.el.inputText.on('keypress', e=>{
