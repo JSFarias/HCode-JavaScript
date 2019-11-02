@@ -2,6 +2,9 @@ class WhatsAppController{
     constructor(){
         console.log("hello");
 
+        this.micRecordTimer = 0;
+        this.micInterval = null;
+
         this.elementsPrototype();
         this.loadElements();
         this.initEvents();
@@ -162,6 +165,8 @@ class WhatsAppController{
             this.el.panelCamera.css({
                 height: 'calc(100% - 120px)'
             })
+
+            this._camera = new CameraController(this.el.videoCamera);
         });
 
         this.el.btnClosePanelCamera.on('click', e=>{
@@ -200,7 +205,121 @@ class WhatsAppController{
             this.el.modalContacts.hide();
         });
 
+        //microphone
+        this.el.btnSendMicrophone.on('click', e=>{
+            this.el.btnSendMicrophone.hide();
+            this.el.recordMicrophone.show();
 
+            this.startRecordMicrophoneTime(); 
+            
+        });
+
+        this.el.btnCancelMicrophone.on('click', e=>{           
+            this.closeRecordMicrophone();
+        });
+
+        this.el.btnFinishMicrophone.on('click', e=>{            
+            this.closeRecordMicrophone();
+        });
+
+        this.el.inputText.on('keypress', e=>{
+            if(!e.ctrlKey && e.key === 'Enter'){
+                e.preventDefault();
+                this.el.btnSend.click();                
+            } 
+        });            
+
+        this.el.inputText.on('keyup', e=>{            
+            if(this.el.inputText.innerHTML.length){  
+                this.el.btnSendMicrophone.hide();
+                this.el.inputPlaceholder.hide();
+                this.el.btnSend.show();
+            }else{                
+                this.cleanTextField();
+            }
+        });
+
+        this.el.btnSend.on('click', e=>{
+            console.log(this.el.inputText.innerHTML);
+            this.el.inputText.innerHTML = '';
+            this.cleanTextField();
+        });
+
+        this.el.btnEmojis.on('click', e=>{
+            if(this.el.panelEmojis.hasClass('open')){
+                this.el.panelEmojis.removeClass('open');
+                this.el.iconEmojisOpen.show();
+                this.el.iconEmojisClose.hide();
+            } else{
+                this.el.panelEmojis.addClass('open');
+                this.el.iconEmojisOpen.hide();
+                this.el.iconEmojisClose.show();
+            }
+        });
+
+        this.el.panelEmojis.querySelectorAll('.emojik').forEach(emoji=>{
+
+            emoji.on('click', e=>{                
+
+                let img = this.el.imgEmojiDefault.cloneNode();
+
+                img.style.cssText = emoji.style.cssText;
+                img.dataset.unicode = emoji.dataset.unicode;
+                img.alt = emoji.dataset.unicode; 
+                
+                emoji.classList.forEach(name=>{
+                    img.classList.add(name);
+                });
+
+                //this.el.inputText.appendChild(img);
+
+                let cursor = window.getSelection();
+                
+                if(!cursor.focusNode || !cursor.focusNode.id == 'input-text')
+                {
+                    this.el.inputText.focus();
+                    cursor = window.getSelection();
+                }
+
+                let range = document.createRange()
+
+                range = cursor.getRangeAt(0);
+                range.deleteContents();      
+                
+                let frag = document.createDocumentFragment();
+                frag.appendChild(img);
+                range.insertNode(frag);
+                range.setStartAfter(img);
+
+                this.el.inputText.dispatchEvent(new Event('keyup'));
+
+            });
+        });
+
+        
+
+    }
+
+    cleanTextField() {
+        this.el.btnSendMicrophone.show();
+        this.el.inputPlaceholder.show();
+        this.el.btnSend.hide();
+    }
+
+    startRecordMicrophoneTime() {
+
+        let start = Date.now();
+        this._recordmicrophoneInterval = setInterval(() => {
+            let time = Date.now() - start;
+            this.el.recordMicrophoneTimer.innerHTML = Format.toTime(time);
+        }, 100);
+
+    }
+
+    closeRecordMicrophone() {
+        this.el.recordMicrophone.hide();
+        this.el.btnSendMicrophone.show();
+        clearInterval(this._recordmicrophoneInterval);
     }
 
     closeAllMainPanel(){
