@@ -94,6 +94,7 @@ export class MicrophoneController extends ClassEvent{
     }
 
     stopRecord(){
+        
         if(this.isAvailable()){
 
             this._mediaRecorder.stop();
@@ -114,6 +115,8 @@ export class MicrophoneController extends ClassEvent{
     }
 
     stopTimer(){
+
         clearInterval(this._recordmicrophoneInterval);
+
     }
 }
