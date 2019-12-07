@@ -19,6 +19,10 @@ export class User extends Model{
     get photo() { return this._data.photo };
     set photo(value){ this._data.photo = value };
 
+    get chatId(){ return this._data.chatId; }
+    set chatId(value) { return this._data.chatId = value; }
+
+
     getById(id){
         return new Promise((s, f)=>{
             User.findByEmail(id).onSnapshot(doc=>{
@@ -52,9 +56,9 @@ export class User extends Model{
         .set(contact.toJSON());
     }
 
-    getContacts(id){
+    getContacts(filter = ''){
         return new Promise((s, f)=>{
-            User.getContactsRef(this.email).onSnapshot(docs=>{
+            User.getContactsRef(this.email).where('name', '>=', filter).onSnapshot(docs=>{
                 let contacts = [];
                 docs.forEach(doc=>{
                     let data = doc.data();
