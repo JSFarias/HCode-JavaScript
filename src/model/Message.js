@@ -318,8 +318,7 @@ export class Message extends Model{
     
                     });       
 
-                });
-    
+                });    
                 
             });
 
