@@ -37,7 +37,7 @@ export class DocumentPreviewController{
                                 }).then(()=>{
                                     s({
                                         src: canvas.toDataURL('image/png'),
-                                        info: `${pdf.numPages} ${pdf.numPages > 1? 'página' : 'páginas'}`
+                                        info: `${pdf.numPages} ${pdf.numPages > 1? 'páginas' : 'página'}`
                                     });
                                 }).catch(err=>{
                                     f(err);
