@@ -20,7 +20,7 @@ export class MicrophoneController extends ClassEvent{
             this.trigger('ready', this._stream);
 
         }).catch(err=>{
-            console.log('err', err);
+            console.error('err', err);
         });
 
     }
@@ -68,13 +68,27 @@ export class MicrophoneController extends ClassEvent{
                 let blob = new Blob(this._recordedChunks, {
                     type: this._mimeType
                 });
-                let filename =  `rec_${Date.now()}.webm`;
-                let file = new File([blob], filename, {
-                    type: this._mimeType,
-                    lastModified: Date.now(),
-                });
 
-                console.log('file',file);
+                let filename =  `rec_${Date.now()}.webm`;
+
+                let audioContext = new AudioContext();
+
+                let reader = new FileReader();
+                reader.onload = e =>{
+
+                    audioContext.decodeAudioData(reader.result).then(decode =>{
+
+                        let file = new File([blob], filename, {
+                            type: this._mimeType,
+                            lastModified: Date.now()
+                        });
+
+                        this.trigger('recorded', file, decode);
+
+                    });                    
+
+                };
+                reader.readAsArrayBuffer(blob);
 
             });   
             

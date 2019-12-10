@@ -2,6 +2,7 @@ import {Format} from './../util/Format';
 import {CameraController} from './CameraController';
 import {MicrophoneController} from './MicrophoneController';
 import {DocumentPreviewController} from './DocumentPreviewController';
+import { ContactsController } from './ContactsController';
 import { Firebase } from '../util/Firebase';
 import { User } from '../model/User';
 import { Chat } from '../model/Chat';
@@ -200,6 +201,8 @@ export class WhatsAppController{
 
                 let me = (data.from === this._user.email);
 
+                let view = message.getViewElement(me);
+
                 if(!this.el.panelMessagesContainer.querySelector('#_'+data.id))
                 {     
 
@@ -211,17 +214,15 @@ export class WhatsAppController{
                             merge: true
                         });
 
-                    }
-
-                    let view = message.getViewElement(me);
+                    }                    
 
                     this.el.panelMessagesContainer.appendChild(view);                    
 
                 } else {
 
-                    let view = message.getViewElement(me);
+                    let parent = this.el.panelMessagesContainer.querySelector('#_'+data.id).parentNode;
 
-                    this.el.panelMessagesContainer.querySelector('#_'+data.id).innerHTML = view.innerHTML;
+                    parent.replaceChild(view, this.el.panelMessagesContainer.querySelector('#_'+data.id));
 
                 }
                 
@@ -230,6 +231,35 @@ export class WhatsAppController{
 
                     let msgEl = this.el.panelMessagesContainer.querySelector('#_'+data.id);
                     msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+
+                }
+
+                if(message.type === 'contact'){
+
+                    view.querySelector('.btn-message-send').on('click', e=>{
+
+                        Chat.createIfNotExists(this._user.email, message.content.email).then(chat =>{
+
+                            let contact = new User(message.content.email);
+
+                            contact.on('datachange', data => {
+
+                                contact.chatId = chat.id;
+
+                                this._user.addContact(contact);
+
+                                this._user.chatId = chat.id;
+        
+                                contact.addContact(this._user);
+
+                                this.setActiveChat(contact);
+
+                            });
+                            
+                        });
+                        
+    
+                    });
 
                 }
 
@@ -633,11 +663,27 @@ export class WhatsAppController{
 
         //contact
         this.el.btnAttachContact.on('click', e=>{
-            this.el.modalContacts.show();
+
+            this._contactsController = new ContactsController(this.el.modalContacts, this._user);
+
+            this._contactsController.on('select', contact=>{
+
+                Message.sendContact(
+                    this._activeContact.chatId,
+                    this._user.email,
+                    contact
+                );
+
+            });
+
+            this._contactsController.open();
+
         });
 
         this.el.btnCloseModalContacts.on('click', e=>{
-            this.el.modalContacts.hide();
+
+            this._contactsController.close();
+
         });
 
         //microphone
@@ -664,9 +710,17 @@ export class WhatsAppController{
             this._microphoneController.stopRecord();
         });
 
-        this.el.btnFinishMicrophone.on('click', e=>{            
-            this.closeRecordMicrophone();
+        this.el.btnFinishMicrophone.on('click', e=>{    
+
+            this._microphoneController.on('recorded', (file, metadata)=>{
+
+                Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
+
+            });
+
             this._microphoneController.stopRecord();
+            this.closeRecordMicrophone();            
+
         });
 
         this.el.inputText.on('keypress', e=>{

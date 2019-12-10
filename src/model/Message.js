@@ -40,12 +40,20 @@ export class Message extends Model{
 
     get from() { return this._data.from; }
     set from(value) { return this._data.from = value; }
+
+    get photo() { return this._data.photo; }
+    set photo(value) { return this._data.photo = value; }
+
+    get duration() { return this._data.duration; }
+    set duration(value) { return this._data.duration = value; }
+    
  
 
     getViewElement(me = true){
 
         let div = document.createElement('div');
 
+        div.id = `_${this.id}`;
         div.className = 'message';
 
         switch(this.type){
@@ -72,7 +80,7 @@ export class Message extends Model{
                                 </div>
                             </div>
                             <div class="_1lC8v">
-                                <div dir="ltr" class="_3gkvk selectable-text invisible-space copyable-text">Nome do Contato Anexado</div>
+                                <div dir="ltr" class="_3gkvk selectable-text invisible-space copyable-text">${this.content.name}</div>
                             </div>
                             <div class="_3a5-b">
                                 <div class="_1DZAH" role="button">
@@ -88,6 +96,14 @@ export class Message extends Model{
 
                 </div>
                 `;
+
+                if(this.content.photo){
+                    let img = div.querySelector('.photo-contact-sended');
+                    img.src = this.content.photo;
+                    img.show();
+                }
+                
+
             break;
 
             case 'image':
@@ -205,17 +221,17 @@ export class Message extends Model{
                             <div class="_2cfqh">
                                 <div class="_1QMEq _1kZiz fS1bA">
                                     <div class="E5U9C">
-                                        <svg class="_1UDDE" width="34" height="34" viewBox="0 0 43 43">
+                                        <svg class="_1UDDE audio-load" width="34" height="34" viewBox="0 0 43 43">
                                             <circle class="_3GbTq _37WZ9" cx="21.5" cy="21.5" r="20" fill="none" stroke-width="3"></circle>
                                         </svg>
-                                        <button class="_2pQE3" style="display:none">
+                                        <button class="_2pQE3 audio-play" style="display:none">
                                             <span data-icon="audio-play">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
                                                     <path fill="#263238" fill-opacity=".5" d="M8.5 8.7c0-1.7 1.2-2.4 2.6-1.5l14.4 8.3c1.4.8 1.4 2.2 0 3l-14.4 8.3c-1.4.8-2.6.2-2.6-1.5V8.7z"></path>
                                                 </svg>
                                             </span>
                                         </button>
-                                        <button class="_2pQE3">
+                                        <button class="_2pQE3 audio-pause" style="display:none">
                                             <span data-icon="audio-pause">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
                                                     <path fill="#263238" fill-opacity=".5" d="M9.2 25c0 .5.4 1 .9 1h3.6c.5 0 .9-.4.9-1V9c0-.5-.4-.9-.9-.9h-3.6c-.4-.1-.9.3-.9.9v16zm11-17c-.5 0-1 .4-1 .9V25c0 .5.4 1 1 1h3.6c.5 0 1-.4 1-1V9c0-.5-.4-.9-1-.9 0-.1-3.6-.1-3.6-.1z"></path>
@@ -224,11 +240,11 @@ export class Message extends Model{
                                         </button>
                                     </div>
                                     <div class="_1_Gu6">
-                                        <div class="message-audio-duration">0:05</div>
+                                        <div class="message-audio-duration">${this.duration}</div>
                                         <div class="_1sLSi">
                                             <span class="nDKsM" style="width: 0%;"></span>
                                             <input type="range" min="0" max="100" class="_3geJ8" value="0">
-                                            <audio src="#" preload="auto"></audio>
+                                            <audio src="${this.content}" preload="auto"></audio>
                                         </div>
                                     </div>
                                 </div>
@@ -276,11 +292,88 @@ export class Message extends Model{
                     </div>
                 </div>
                 `;
+
+                if(this.photo){
+
+                    let img = div.querySelector('.message-photo');
+                    img.src = this.photo;
+                    img.show();
+
+                }
+
+                let audioEl = div.querySelector('audio');
+                let loadEl = div.querySelector('.audio-load');
+                let btnPlay = div.querySelector('.audio-play');
+                let btnPause = div.querySelector('.audio-pause');
+                let inputRange = div.querySelector('[type=range]');
+                let audioDuration = div.querySelector('.message-audio-duration');
+
+
+                audioEl.onloadeddata = e =>{
+
+                    audioDuration.innerHTML = Format.toTime(this.duration * 1000);
+                    loadEl.hide();
+                    btnPlay.show();
+
+                }
+
+                audioEl.onplay = e=>{
+
+                    btnPause.show();
+                    btnPlay.hide();
+                    
+                }
+
+                audioEl.onpause = e=>{
+
+                    //audioDuration.innerHTML = Format.toTime(this.duration * 1000);
+                    btnPause.hide();
+                    btnPlay.show();
+                    
+                }
+
+                audioEl.onended = e=>{
+
+                    audioEl.currentTime = 0;
+
+                }
+
+                audioEl.ontimeupdate = e=>{
+
+                    btnPause.hide();
+                    btnPlay.hide();
+
+                    audioDuration.innerHTML = Format.toTime(audioEl.currentTime * 1000);
+                    inputRange.value = (audioEl.currentTime * 100) / this.duration;
+
+                    if(audioEl.paused){
+                        btnPlay.show();
+                    }else{
+                        btnPause.show();
+                    }
+
+                }
+
+                btnPlay.on('click', e=>{
+                    audioEl.play();
+                });
+
+                btnPause.on('click', e=>{
+                    audioEl.pause();
+                });
+
+                inputRange.on('change', e=>{
+
+                    audioEl.currentTime = (inputRange.value * this.duration) / 100;
+
+                })
+
+
             break;
 
             default:
                 div.innerHTML = `
-                <div class="font-style _3DFk6 tail" id="_${this.id}">
+                <div class="font-style _3DFk6 tail">
                     <span class="tail-container"></span>
                     <span class="tail-container highlight"></span>
                     <div class="Tkt2p">
@@ -339,6 +432,46 @@ export class Message extends Model{
             });
 
         })        
+
+    }
+
+    static sendAudio(chatId, from, file, metadata, photo){
+
+        return Message.send(chatId, from, 'audio', '').then(msgRef =>{
+
+            Message.uploadFile(file, from).then(downloadURL =>{
+
+                let downloadFile = downloadURL;
+
+                msgRef.set({
+                    content: downloadFile,
+                    size: file.size,
+                    fileType: file.type,                    
+                    status: 'sent',
+                    duration: metadata.duration,
+                    photo,
+                }, {
+                    merge: true
+                });
+
+            });
+            
+        });
+        
+    }
+
+    static sendContact(chatId, from, contact){
+
+        Message.send(chatId, from, 'contact', contact).then(msg=>{
+
+            msg.set({
+                content: contact,
+                status: 'sent'
+            }, {
+                merge: true
+            });
+
+        });
 
     }
 
