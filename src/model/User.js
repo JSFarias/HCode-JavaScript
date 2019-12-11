@@ -58,8 +58,11 @@ export class User extends Model{
 
     getContacts(filter = ''){
         return new Promise((s, f)=>{
+
             User.getContactsRef(this.email).where('name', '>=', filter).onSnapshot(docs=>{
+
                 let contacts = [];
+                
                 docs.forEach(doc=>{
                     let data = doc.data();
                     data.id = doc.id;
