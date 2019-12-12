@@ -70,6 +70,10 @@ export class WhatsAppController{
 
             });
 
+            let sound  =  new Audio('./audio/alert.mp3');
+            sound.currentTime = 0;
+            sound.play();
+
             setTimeout(e=>{
                 if(n){
                     n.close();
