@@ -12,18 +12,72 @@ import { Upload } from '../util/Upload';
 
 export class WhatsAppController{
     constructor(){
-        console.log("hello");
 
         this.micRecordTimer = 0;
         this.micInterval = null;       
         
         this._firebase = new Firebase();
 
+        this._active = true;
         this.initAuth();
         this.elementsPrototype();
         this.loadElements();
         this.initEvents();
+        this.checkNotifications();
         
+    }
+
+    checkNotifications(){
+
+        if(typeof Notification === 'function'){
+
+            if(Notification.permission !== 'granted'){
+
+                this.el.alertNotificationPermission.show();
+
+            }else{
+
+                this.el.alertNotificationPermission.hide();
+
+            }
+
+            this.el.alertNotificationPermission.on('click', e=>{
+
+                Notification.requestPermission(permission=>{
+
+                    if(permission === 'granted'){
+
+                        this.el.alertNotificationPermission.hide();
+
+                    }
+
+                });
+
+            });
+
+        }
+
+    }
+
+    notification(data){
+
+        if(Notification.permission === 'granted' && !this._active){
+
+            let n = new Notification(this._activeContact.name, {
+
+                icon: this._activeContact.photo,
+                body: data.content
+
+            });
+
+            setTimeout(e=>{
+                if(n){
+                    n.close();
+                }
+            }, 3000);
+
+        }
+
     }
 
     initAuth(){
@@ -75,7 +129,6 @@ export class WhatsAppController{
 
         this._user.on('contactschange', docs=>{
 
-            console.log('triggered');
             this.el.contactsMessagesList.innerHTML = '';
 
             docs.forEach(doc=>{
@@ -183,7 +236,9 @@ export class WhatsAppController{
 
         }
 
-        this.el.panelMessagesContainer.innerHTML = '';        
+        this.el.panelMessagesContainer.innerHTML = '';     
+        
+        this._messagesReceived = [];
 
         Message.getRef(this._activeContact.chatId).orderBy('timeStamp').onSnapshot(docs=>{    
 
@@ -200,14 +255,21 @@ export class WhatsAppController{
                 
                 message.fromJSON(data);
 
-                let me = (data.from === this._user.email);
+                let me = (data.from === this._user.email);                
+
+                if(!me && this._messagesReceived.filter(id => { return id === data.id }).length === 0){
+
+                    this.notification(data);
+                    this._messagesReceived.push(data.id);
+
+                }
 
                 let view = message.getViewElement(me);
 
                 if(!this.el.panelMessagesContainer.querySelector('#_'+data.id))
                 {     
 
-                    if(!me){
+                    if(!me){                        
 
                         docMsg.ref.set({
                             status: 'read'
@@ -257,8 +319,7 @@ export class WhatsAppController{
 
                             });
                             
-                        });
-                        
+                        });                        
     
                     });
 
@@ -351,6 +412,16 @@ export class WhatsAppController{
     }
 
     initEvents(){
+
+        //notifications
+        window.addEventListener('focus', e=>{
+            this._active = true;
+        });
+
+        window.addEventListener('blur', e=>{
+            this._active = false;
+        });
+
 
         //search contacts
         this.el.inputSearchContacts.on('keyup', e=>{
