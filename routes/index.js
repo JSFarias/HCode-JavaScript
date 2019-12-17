@@ -58,7 +58,7 @@ router.get('/reservations', function(req, res, next){
 });
 
 router.post('/reservations', function(req, res, next){
-
+ 
   if(!req.body.name){
     reservations.render(req, res, 'coloque nome');
   }else if(!req.body.email){
@@ -70,7 +70,18 @@ router.post('/reservations', function(req, res, next){
   }else if(!req.body.time){
     reservations.render(req, res, 'coloque hora');
   } else {
-    res.send(req.body);
+
+    reservations.save(req.body).then(results =>{
+
+      req.body = {};
+      reservations.render(req, res, null, "Reserva realizada com sucesso");      
+
+    }).catch(err=>{
+
+      reservations.render(req, res, err.message);
+
+    });
+
   }
 
   
