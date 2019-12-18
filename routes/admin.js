@@ -3,6 +3,7 @@ var express = require('express')
 var router = express.Router()
 var users = require('./../inc/users')
 var admin = require('./../inc/admin')
+var menus = require('./../inc/menus')
 
 
 //middleware
@@ -35,10 +36,6 @@ router.get('/', function(req, res, next){
     });
     
 });
-
-// router.get('/index', function(req, res, next){
-//     res.render('admin/index', admin.getParams(req));
-// });
 
 router.get('/login', function(req, res, next){    
     users.render(req, res, null);
@@ -76,7 +73,23 @@ router.get('/emails', function(req, res, next){
 });
 
 router.get('/menus', function(req, res, next){
-    res.render('admin/menus',admin.getParams(req));
+
+    menus.getMenus().then(data=>{
+
+        res.render('admin/menus',admin.getParams(req,{
+            data
+        }));
+
+    }).catch(err=>{
+        console.error(err);
+    });    
+
+});
+
+router.post('/menus', function(req, res, next){
+
+    res.send(req.body);
+
 });
 
 router.get('/reservations', function(req, res, next){
