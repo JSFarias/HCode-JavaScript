@@ -6,7 +6,7 @@ module.exports = {
 
         res.render('admin/login', {
             body: req.body,
-            error
+            error,
         });
 
     },

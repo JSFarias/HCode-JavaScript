@@ -22,7 +22,14 @@ router.get('/logout', function(req, res, next){
 });
 
 router.get('/', function(req, res, next){
-    res.render('admin/index');
+    res.render('admin/index', {
+        activeUrl: req.url
+    });
+});
+router.get('/index', function(req, res, next){
+    res.render('admin/index', {
+        activeUrl: req.url
+    });
 });
 
 router.get('/login', function(req, res, next){    
@@ -53,25 +60,34 @@ router.post('/login', function(req, res, next){
 });
 
 router.get('/contacts', function(req, res, next){
-    res.render('admin/contacts');
+    res.render('admin/contacts',{
+        activeUrl: req.url
+    });
 });
 
 router.get('/emails', function(req, res, next){
-    res.render('admin/emails');
+    res.render('admin/emails',{
+        activeUrl: req.url
+    });
 });
 
 router.get('/menus', function(req, res, next){
-    res.render('admin/menus');
+    res.render('admin/menus',{
+        activeUrl: req.url
+    });
 });
 
 router.get('/reservations', function(req, res, next){
     res.render('admin/reservations', {
-        date:{}
+        date:{},
+        activeUrl: req.url
     });
 });
 
 router.get('/users', function(req, res, next){
-    res.render('admin/users');
+    res.render('admin/users',{
+        activeUrl: req.url
+    });
 });
 
 module.exports = router;
