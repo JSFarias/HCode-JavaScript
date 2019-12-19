@@ -4,6 +4,7 @@ var router = express.Router()
 var users = require('./../inc/users')
 var admin = require('./../inc/admin')
 var menus = require('./../inc/menus')
+var reservations = require('./../inc/reservations')
 
 
 //middleware
@@ -16,6 +17,8 @@ router.use(function(req, res, next){
 
 });
 
+
+//logout
 router.get('/logout', function(req, res, next){
 
     delete req.session.user;
@@ -37,6 +40,8 @@ router.get('/', function(req, res, next){
     
 });
 
+
+//login
 router.get('/login', function(req, res, next){    
     users.render(req, res, null);
 });
@@ -64,14 +69,20 @@ router.post('/login', function(req, res, next){
 
 });
 
+
+//contacts
 router.get('/contacts', function(req, res, next){
     res.render('admin/contacts',admin.getParams(req));
 });
 
+
+//emails
 router.get('/emails', function(req, res, next){
     res.render('admin/emails',admin.getParams(req));
 });
 
+
+//menus
 router.get('/menus', function(req, res, next){
 
     menus.getMenus().then(data=>{
@@ -89,9 +100,7 @@ router.get('/menus', function(req, res, next){
 router.post('/menus', function(req, res, next){
 
     menus.save(req.fields, req.files).then(results=>{
-
         res.send(results);
-
     }).catch(err=>{
         res.send(err);
     });
@@ -112,12 +121,32 @@ router.delete('/menus/:id', function(req, res, next){
 
 });
 
+
+//reservations
 router.get('/reservations', function(req, res, next){
-    res.render('admin/reservations', admin.getParams(req, {
-        date: {}
-    }));
+
+    
+    reservations.getReservations().then(data=>{
+        res.render('admin/reservations', admin.getParams(req, {
+            date: {}, 
+            data      
+        }));
+    });
+    
 });
 
+router.post('/reservations', function(req, res, next){
+
+    reservations.save(req.body).then(results=>{
+        res.send(results);
+    }).catch(err=>{
+        res.send(err);
+    });
+    
+});
+
+
+//users
 router.get('/users', function(req, res, next){
     res.render('admin/users', admin.getParams(req));
 });
