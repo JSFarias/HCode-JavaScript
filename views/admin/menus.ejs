@@ -66,7 +66,7 @@
     <div class="modal fade" id="modal-create">
       <div class="modal-dialog">
         <div class="modal-content" style="border-top: 3px solid #00a65a;">
-          <form method="post">
+          <form action="/admin/menus" method="post">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
@@ -106,7 +106,7 @@
     <div class="modal fade" id="modal-update">
       <div class="modal-dialog">
         <div class="modal-content" style="border-top: 3px solid #00c0ef;">
-          <form method="post">
+          <form action="/admin/menus" method="post">
             <input type="hidden" name="id">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -153,34 +153,29 @@
   <%- include('inc/footer-ajax') -%>
 
   <script src="/js/my-filereader.js"></script> </script>
+  <script src="/js/my-formsave.js"></script> </script>
 
   <script>
 
+  //read/show photo
   new MyFileReader('#modal-create [type=file]', '#modal-create img');
   new MyFileReader('#modal-update [type=file]', '#modal-update img');
   
-  let formCreate = document.querySelector('#modal-create form');  
+  //form-create
+  let formCreate = document.querySelector('#modal-create form');    
+  formCreate.save().then(json=>{
+    window.location.reload();
+  }).catch(err=>{
+    console.error(err);
+  })
 
-  formCreate.addEventListener('submit', e=>{
-    
-    e.preventDefault();
-
-    let formCreateData = new FormData(formCreate);
-
-    fetch("/admin/menus", {
-      method:'POST',
-      body: formCreateData
-    })
-    .then(response => response.json())
-    .then(json=>{
-      
-      window.location.reload();
-
-    });
-
-  });
-
+  //form-update
   let formUpdate = document.querySelector('#modal-update form');
+  formUpdate.save().then(json=>{
+    window.location.reload();
+  }).catch(err=>{
+    console.error(err);
+  });
 
   [...document.querySelectorAll('.btn-update')].forEach(btn=>{
     btn.addEventListener('click', e=>{
@@ -196,6 +191,7 @@
         switch(name){
           case 'photo':
             formUpdate.querySelector('img').src = '/'+data[name];
+            console.log(formUpdate.querySelector('img').src);
           break;
 
           default:
@@ -209,6 +205,8 @@
 
     });
   });  
+
+  
 
   </script>
 
