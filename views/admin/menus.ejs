@@ -154,91 +154,18 @@
 
   <script src="/js/my-filereader.js"></script> </script>
   <script src="/js/my-formsave.js"></script> </script>
+  <script src='/js/my-grid.js'></script>
 
   <script>
 
   //read/show photo
   new MyFileReader('#modal-create [type=file]', '#modal-create img');
   new MyFileReader('#modal-update [type=file]', '#modal-update img');
-  
-  //form-create
-  let formCreate = document.querySelector('#modal-create form');    
-  formCreate.save().then(json=>{
-    window.location.reload();
-  }).catch(err=>{
-    console.error(err);
-  })
 
-  //form-update
-  let formUpdate = document.querySelector('#modal-update form');
-  formUpdate.save().then(json=>{
-    window.location.reload();
-  }).catch(err=>{
-    console.error(err);
-  });
-
-
-  [...document.querySelectorAll('.btn-delete')].forEach(btn=>{    
-
-    btn.addEventListener('click', e=>{
-
-      let tr = e.path.find(el =>{
-        return (el.tagName.toUpperCase() === 'TR');
-      });
-
-      let data = JSON.parse(tr.dataset.row);
-
-      if(confirm(`Deseja realmente excluir o menu ${data.title}?`)){
-        
-        fetch(`/admin/menus/${data.id}`, {
-          method: 'DELETE'
-        })
-        .then(response=> response.json())
-        .then(json=>{
-
-          console.log(json);
-          window.location.reload();
-
-        });
-
-      }
-
-    });
-
-  }); 
-  
-
-  [...document.querySelectorAll('.btn-update')].forEach(btn=>{
-    btn.addEventListener('click', e=>{
-
-      let tr = e.path.find(el =>{
-        return (el.tagName.toUpperCase() === 'TR');
-      });
-
-      let data = JSON.parse(tr.dataset.row);
-
-      for (let name in data){
-        
-        switch(name){
-          case 'photo':
-            formUpdate.querySelector('img').src = '/'+data[name];
-            console.log(formUpdate.querySelector('img').src);
-          break;
-
-          default:
-            let input = formUpdate.querySelector(`[name=${name}]`);
-            if(input) input.value = data[name];
-        }
-
-      }
-
-      $('#modal-update').modal('show');
-
-    });    
-
-  });  
-
-  
+  new MyGrid({      
+      deleteUrl: '/admin/menus/${data.id}',
+      deleteMsg: 'Deseja realmente excluir o menu ${data.title}?'
+    });  
 
   </script>
 
