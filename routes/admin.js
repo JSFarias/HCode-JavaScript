@@ -145,6 +145,17 @@ router.post('/reservations', function(req, res, next){
     
 });
 
+router.delete('/reservations/:id', function(req, res, next){
+
+    reservations.delete(req.params.id).then(results=>{
+        res.send(results);
+    }).catch(err=>{
+        res.send(err);
+    });
+    
+});
+
+
 
 //users
 router.get('/users', function(req, res, next){

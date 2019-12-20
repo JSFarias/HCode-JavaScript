@@ -9,7 +9,6 @@ HTMLFormElement.prototype.save = function(){
             e.preventDefault();
     
             let formData = new FormData(form);
-    
             fetch(form.action, {
                 method: form.method,
                 body: formData
