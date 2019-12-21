@@ -164,7 +164,20 @@
 
   new MyGrid({      
       deleteUrl: '/admin/menus/${data.id}',
-      deleteMsg: 'Deseja realmente excluir o menu ${data.title}?'
+      deleteMsg: 'Deseja realmente excluir o menu ${data.title}?',
+      onUpdateLoad:(formUpdate, name, data)=>{
+
+        let input = formUpdate.querySelector(`[name=${name}`);
+        
+        switch(name){
+            case 'photo':
+                formUpdate.querySelector('img').src = '/'+data[name];
+            break;
+            default:            
+                if(input) input.value = data[name];
+        }  
+
+      }
     });  
 
   </script>

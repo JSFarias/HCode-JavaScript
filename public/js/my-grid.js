@@ -95,19 +95,9 @@ class MyGrid{
 
             let data = this.getTrData(e);
 
-            for(let name in data){
+            for(let name in data){                
 
-                let input = this.formUpdate.querySelector(`[name=${name}`);
-                switch(name){
-                    case 'photo':
-                        this.formUpdate.querySelector('img').src = '/'+data[name];
-                    break;
-                    case 'date':
-                        if(input) input.value = moment(data[name]).format("YYYY-MM-DD") ;
-                    break;
-                    default:            
-                        if(input) input.value = data[name];
-                }  
+                this.options.onUpdateLoad(this.formUpdate, name, data);                
 
             }                  
 
