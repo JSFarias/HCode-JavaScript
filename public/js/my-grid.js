@@ -1,6 +1,40 @@
 class MyGrid{
 
     constructor(configs){
+
+        configs.listeners = Object.assign({
+            afterUpdateClick: e=>{
+
+            $('#modal-update').modal('show');
+    
+            },
+            afterDeleteClick:e=>{
+
+            window.location.reload();
+    
+            },
+            afterFormCreate: e=>{
+
+            window.location.reload();
+
+            },
+            afterFormUpdate: e=>{
+
+            window.location.reload();
+
+            },
+            afterFormCreateError:e=>{
+
+            alert("Não foi possível enviar o formulário");
+
+            },
+            afterFormUpdateError:e=>{
+
+            alert("Não foi possível enviar o formulário");
+            
+            }
+        }, configs.listeners);
+
         this.options = Object.assign({},
             {
                 formCreate: '#modal-create form',
@@ -20,18 +54,35 @@ class MyGrid{
 
         //create
         this.formCreate.save().then(json=>{
-            window.location.reload();
+            this.fireEvent('afterFormCreate');
         }).catch(err=>{
-            console.error(err);
+            this.fireEvent('afterFormCreateError');
         });
 
         //update
         this.formUpdate.save().then(json=>{
-            window.location.reload();
+            this.fireEvent('afterFormUpdate');
         }).catch(err=>{
-            console.error(err);
+            this.fireEvent('afterFormUpdateError');
         });
         
+    }
+
+    fireEvent(name, args){
+
+        if(typeof this.options.listeners[name] === 'function') this.options.listeners[name].apply(this, args);
+
+    }
+
+
+    getTrData(e){
+
+        let tr = e.path.find(el=>{
+            return el.tagName.toUpperCase()=== 'TR';
+        });
+
+        return JSON.parse(tr.dataset.row);
+
     }
 
 
@@ -40,13 +91,9 @@ class MyGrid{
         //update        
         [...document.querySelectorAll(this.options.btnUpdate)].forEach(btn=>{
 
-            btn.addEventListener('click', e=>{
-            
-            let tr = e.path.find(el=>{
-                return el.tagName.toUpperCase()=== 'TR';
-            });
+            btn.addEventListener('click', e=>{            
 
-            let data = JSON.parse(tr.dataset.row);
+            let data = this.getTrData(e);
 
             for(let name in data){
 
@@ -61,10 +108,10 @@ class MyGrid{
                     default:            
                         if(input) input.value = data[name];
                 }  
-                              
-            }      
 
-            $('#modal-update').modal('show');
+            }                  
+
+            this.fireEvent('afterUpdateClick', [e]);
 
             });    
 
@@ -74,11 +121,7 @@ class MyGrid{
         [...document.querySelectorAll(this.options.btnDelete)].forEach(btn=>{
             btn.addEventListener('click', e=>{
 
-            let tr = e.path.find(el=>{
-                return el.tagName.toUpperCase() === 'TR';
-            });
-
-            let data = JSON.parse(tr.dataset.row);
+            let data = this.getTrData(e);
 
             if(confirm(eval('`'+this.options.deleteMsg+'`'))){
 
@@ -88,6 +131,7 @@ class MyGrid{
                 .then(response => response.json())
                 .then(json=>{
 
+                this.fireEvent('afterDeleteClick');
                 window.location.reload();
 
                 });
