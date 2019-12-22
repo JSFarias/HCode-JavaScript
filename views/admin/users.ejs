@@ -35,16 +35,20 @@
                   </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>Hcode</td>
-                        <td>contato@hcode.com.br</td>
+
+                  <% data.forEach(row=>{ %>
+                    <tr data-row='<%= JSON.stringify(row); %>'>
+                        <td><%= row.id %></td>
+                        <td><%= row.name %></td>
+                        <td><%= row.email %></td>
                         <td>
-                            <button type="button" class="btn btn-xs btn-info" data-toggle="modal" data-target="#modal-update"><i class="fa fa-pencil"></i> Editar</button>&nbsp;
-                            <button type="button" class="btn btn-xs btn-warning btn-update" data-toggle="modal" data-target="#modal-update-password">
+                            <button type="button" class="btn btn-xs btn-info btn-update"><i class="fa fa-pencil"></i> Editar</button>&nbsp;
+                            <button type="button" class="btn btn-xs btn-warning btn-update-password">
                                 <i class="fa fa-lock"></i> Alterar Senha</button>&nbsp;
                             <button type="button" class="btn btn-xs btn-danger btn-delete"><i class="fa fa-trash"></i> Excluir</button></td>
                     </tr>
+                    <% }); %>
+
                 </tbody>
             </table>
         </div>
@@ -59,7 +63,7 @@
   <div class="modal fade" id="modal-update-password">
     <div class="modal-dialog">
       <div class="modal-content" style="border-top: 3px solid #f39c12;">
-        <form method="post">
+        <form method="post" action='/admin/users'>
           <input type="hidden" name="id">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -91,7 +95,7 @@
   <div class="modal fade" id="modal-create">
     <div class="modal-dialog">
       <div class="modal-content" style="border-top: 3px solid #00a65a;">
-        <form method="post">
+        <form method="post" action='/admin/users'>
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
@@ -126,7 +130,7 @@
   <div class="modal fade" id="modal-update">
     <div class="modal-dialog">
       <div class="modal-content" style="border-top: 3px solid #00c0ef;">
-        <form method="post">
+        <form method="post" action='/admin/users'>
           <input type="hidden" name="id">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -161,6 +165,109 @@
 
 <%- include('inc/footer-scripts') -%>
 <%- include('inc/footer-ajax') -%>
+
+<script src='/js/my-formsave.js'></script>
+
+<script>
+
+
+let formCreate = document.querySelector('#modal-create form');
+formCreate.save().then(json=>{
+  //window.location.reload();
+  console.log('OKKK', json);
+}).catch(err=>{
+  console.error('ERROR', err);
+})
+
+//update
+let formUpdate = document.querySelector('#modal-update form');
+formUpdate.save().then(json=>{
+ // window.location.reload();
+}).catch(err=>{
+  console.error(err);
+});
+
+[...document.querySelectorAll('.btn-update')].forEach(btn=>{
+
+  btn.addEventListener('click', e=>{
+
+    let tr = e.path.find(el=>{
+      return el.tagName.toUpperCase() === 'TR';
+    })
+
+    let data = JSON.parse(tr.dataset.row);
+
+    for(let name in data){
+      let input = formUpdate.querySelector(`[name=${name}]`)
+      if(input) input.value = data[name];
+    }
+
+    $('#modal-update').modal('show');
+
+  });
+
+});
+
+//update password
+let formUpdatePassword = document.querySelector('#modal-update-password form');
+formUpdatePassword.save().then(json=>{
+  console.log('ok');
+}).catch(err=>{
+  console.log('err',err);
+});
+
+[...document.querySelectorAll('.btn-update-password')].forEach(btn=>{
+
+  btn.addEventListener('click', e=>{
+
+    let tr = e.path.find( el => { return el.tagName.toUpperCase() === 'TR'}) ;
+    
+    let data = JSON.parse(tr.dataset.row);
+
+    formUpdatePassword.querySelector('[name=id]').value = data.id;
+
+    $('#modal-update-password').modal('show');
+  });
+
+});
+
+
+
+//delete
+[...document.querySelectorAll('.btn-delete')].forEach(btn=>{
+
+  btn.addEventListener('click', e=>{
+
+    let tr = e.path.find(el=>{
+      return el.tagName.toUpperCase() === 'TR';
+    })
+
+    let data = JSON.parse(tr.dataset.row);
+
+    if(confirm(`DELETAR ${data.name}?`)){
+
+      fetch(`/admin/users/${data.id}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(json=>{
+        window.location.reload();
+      });
+
+    }
+
+    
+  });
+
+  //update
+
+});
+
+
+
+
+
+</script>
 
 </body>
 </html>

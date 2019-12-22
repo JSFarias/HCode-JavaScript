@@ -56,13 +56,10 @@ module.exports = {
                 fields.time
             ]
 
-            console.log("ID?", fields.id);
-
             if(fields.id){
 
                 params.push(fields.id);
 
-                console.log("IDDDDDDDDD");
                 query = `
                 UPDATE tb_reservations SET
                     name=?,
