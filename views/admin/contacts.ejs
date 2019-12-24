@@ -63,36 +63,13 @@
 
   <%- include('inc/footer-scripts') -%>
 
+  <script src='/js/my-grid.js'></script>
+
   <script>
   
-    [...document.querySelectorAll('.btn-delete')].forEach(btn=>{
-
-      btn.addEventListener('click', e=>{
-        
-        if(confirm('DELETAR?')){
-
-          let tr = e.path.find(el=>{
-            return el.tagName.toUpperCase() === 'TR'
-          })
-
-          let data = JSON.parse(tr.dataset.row);
-
-          fetch(`/admin/contacts/${data.id}`,{
-            method: 'DELETE'
-            
-          })
-          .then(response => response.json())
-          .then(json=>{
-            console.log('JSON',json)
-          }).catch(err=>{
-            console.error('ERR',err)
-          });
-          
-          window.location.reload()
-
-        }
-      })
-
+    new MyGrid({
+      deleteUrl: '/admin/contacts/${data.id}',
+      deleteMsg: 'Deletar ${data.name}?'
     })
 
   </script>

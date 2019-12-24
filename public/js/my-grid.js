@@ -55,24 +55,30 @@ class MyGrid{
     initForms(){
 
         //create
-        this.formCreate.save({
-            sucess:()=>{
-                this.fireEvent('afterFormCreate');
-            },
-            failure:()=>{
-                this.fireEvent('afterFormCreateError');
-            }
-        });
+        if(this.formCreate)
+        {
+            this.formCreate.save({
+                sucess:()=>{
+                    this.fireEvent('afterFormCreate');
+                },
+                failure:()=>{
+                    this.fireEvent('afterFormCreateError');
+                }
+            });
+        }
 
         //update
-        this.formUpdate.save({
-            sucess:()=>{
-                this.fireEvent('afterFormCreate');
-            },
-            failure:()=>{
-                this.fireEvent('afterFormCreateError');
-            }
-        });
+        if(this.formUpdate)
+        {
+            this.formUpdate.save({
+                sucess:()=>{
+                    this.fireEvent('afterFormCreate');
+                },
+                failure:()=>{
+                    this.fireEvent('afterFormCreateError');
+                }
+            });
+        }
         
     }
 
@@ -118,7 +124,7 @@ class MyGrid{
             })
             .then(response => response.json())
             .then(json=>{
-
+                
             this.fireEvent('afterDeleteClick');
             window.location.reload();
 
