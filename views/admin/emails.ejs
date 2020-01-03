@@ -33,11 +33,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>1.</td>
-                                    <td>contato@hcode.com.br</td>
+
+                                <% data.forEach(row=>{ %>
+                                <tr data-row = '<%= JSON.stringify(row); %>''>
+                                    <td><%= row.id %></td>
+                                    <td><%= row.email %></td>
                                     <td><button type="button" class="btn btn-xs btn-danger btn-delete"><i class="fa fa-trash"></i> Excluir</button></td>
                                 </tr>
+                                <% }); %>
+
                             </tbody>
                         </table>
                     </div>
@@ -55,6 +59,18 @@
 
 <%- include('inc/footer-scripts') -%>
 
+<script src='/js/my-grid.js'></script>
+<script>
+
+    new MyGrid({
+        deleteUrl: '/admin/emails/${data.id}',
+        deleteMsg: 'Deseja realmente deletar o email ${data.email}?'
+    })
+
+</script>
+
 </body>
+
+
 
 </html>

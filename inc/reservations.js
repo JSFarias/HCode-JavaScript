@@ -1,4 +1,5 @@
 var conn = require('./db');
+var Pagination = require('./../inc/Pagination')
 
 module.exports = {
 
@@ -15,23 +16,15 @@ module.exports = {
         
     },
 
-    getReservations(){
+    getReservations(page){
 
-        return new Promise((resolve, reject)=>{
+        if(!page) page = 1;
 
-            conn.query(`
-                SELECT * FROM tb_reservations ORDER BY id
-            `,(err, results)=>{
+        let pag = new Pagination(
+            `SELECT SQL_CALC_FOUND_ROWS * FROM tb_reservations ORDER BY name LIMIT ?, ?`
+        );
 
-                if(err)
-                    reject(err);
-                else{
-                    resolve(results);
-                }
-
-            });
-
-        });
+        return pag.getPage(page);
 
     },
 
@@ -81,10 +74,8 @@ module.exports = {
             conn.query(query, params, (err, results)=>{
 
                 if(err){
-                    console.log("err",err);
                     reject(err);
                 }else{
-                    console.log("results",results);
                     resolve(results);
                 }
 

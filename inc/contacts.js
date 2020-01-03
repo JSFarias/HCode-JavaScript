@@ -36,6 +36,20 @@ module.exports = {
 
             });
 
+            conn.query(`
+            INSERT INTO tb_emails (email)
+            VALUES(?)
+            `,[
+                fields.email
+            ],(err,result)=>{
+
+                if(err)
+                reject(err)
+                else
+                resolve(result)
+
+            })
+
         });
         
     },

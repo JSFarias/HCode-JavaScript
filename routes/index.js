@@ -4,6 +4,7 @@ var router = express.Router();
 var menus = require('./../inc/menus')
 var reservations = require('./../inc/reservations')
 var contacts = require('./../inc/contacts')
+var subscribe = require('./../inc/subscribe')
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -116,6 +117,30 @@ router.get('/services', function(req, res, next){
     h1: 'É um prazer poder servir!'
   });
 });
+
+//subscribe
+router.post('/subscribe', function(req, res, next){
+
+  subscribe.save(req.body).then(result=>{
+
+    menus.getMenus().then(menuResults=>{
+
+      subscribe.render(req, res, null, 'Email cadastrado com sucesso!', menuResults);
+  
+    }).catch(err=>{
+  
+      console.error(err);
+  
+    });
+    
+
+  }).catch(err=>{
+
+      console.error(err)
+    
+  })
+
+})
 
 
 module.exports = router;
