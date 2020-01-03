@@ -160,12 +160,18 @@ router.delete('/menus/:id', function(req, res, next){
 //reservations
 router.get('/reservations', function(req, res, next){
     
-    reservations.getReservations(req.query.page).then(data=>{
-        res.render('admin/reservations', admin.getParams(req, {
-            date: {}, 
-            data,
-            moment 
-        }));
+    reservations.getReservations(req).then(pag=>{
+
+            res.render('admin/reservations', admin.getParams(req, {
+                date: {
+                    start: req.query.start,
+                    end: req.query.end
+                }, 
+                data: pag.data,
+                moment,
+                links: pag.links
+            }));
+            
     });
     
 });
