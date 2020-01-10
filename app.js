@@ -21,7 +21,7 @@ var io = socket(http);
 
 io.on('connection', function(socket){
 
-  console.log('novo usuário conectado ******');  
+  console.log('novo usuário conectado ******');
 
 });
 

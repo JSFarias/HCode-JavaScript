@@ -102,6 +102,7 @@
   <script>
 
     function refreshDashboard(){
+
       fetch('/admin/dashboard')
       .then(response => response.json())
       .then(json => {
@@ -112,11 +113,13 @@
         document.querySelector('#nrusers').innerHTML = json.nrusers;
 
       })
+
     }
   
     let socket = io();
     socket.on('dashboard update', function(){
       refreshDashboard();
+      console.log('recebido')
     })
 
   </script>
