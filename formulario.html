@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Curso Completo Dev Web</title>
+		<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+	</head>
+	<body>
+
+		<form method="POST" action="form.php">
+			<div class="form-group">
+				<label for="nome">Nome</label>
+				<input type="text" name="nome" id="nome" class="form-control" placeholder="Digite seu nome" required>
+			</div>
+			<div class="form-group">
+				<label for="email">E-mail</label>
+				<input type="text" name="email" id="email" class="form-control" placeholder="seu@email.com" required>
+			</div>
+			<div class="form-group">
+				<label for="nascimento">Nascimento</label>
+				<input type="date" name="nascimento" id="nascimento" class="form-control" placeholder="seu@email.com" required min="2020-01-05" max="2020-01-15">
+			</div>
+			<div class="form-group">
+				<h6>Sexo</h6>
+				<input type="radio" name="sexo" id="masculino">
+				<label for="masculino">Masculino</label>
+				<input type="radio" name="sexo" id="feminino">
+				<label for="feminino">Feminino</label>
+				<input type="radio" name="sexo" id="undefined" checked>
+				<label for="undefined">Não informar</label>
+			</div>
+			<div class="form-group">
+				<label for="li">Li e aceito</label>
+				<input type="checkbox" name="li" id="li" required checked>
+			</div>
+			<div class="form-group">
+				<label for="volume">Volume</label>
+				<input type="range" name="volume" id="volume" min="0" max="100" value="75">
+			</div>
+			<div class="form-group">
+				<label>Bateria</label>
+				<meter min="0" max="100" low="15" value="50"></meter>
+			</div>
+			<div class="form-group">
+				<label>Carregando</label>
+				<progress value="35" max="100">
+			</div>
+			<div class="form-group">
+				<label for="ano">Ano de fabricação</label>
+				<input type="number" name="ano" id="ano" min="1920" max="2021" value="2020" step="5" class="form-control">
+			</div>
+			<div class="form-group">
+				<label for="cor">Cor</label>
+				<input type="color" name="cor" id="cor">
+			</div>
+			<div class="form-group">
+				<label for="url">URL</label>
+				<input type="url" name="url" id="url">
+			</div>
+			<div class="form-group">
+				<label for="busca">Busca</label>
+				<input type="search" name="busca" id="busca">
+			</div>
+			<div class="form-group">
+				<label for="mensagem">Mensagem</label>
+				<textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
+			</div>
+			<div class="form-group">
+				<label for="paises">países</label>
+				<select name="paises" id="paises">
+					<option value="BR">Brasil</option>
+					<option value="US">Estados Unidos</option>
+					<option value="CA" selected>Canadá</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="estados">Estados</label>
+				<select name="estados" id="estados">
+					<option value="RJ">Rio de Janeiro</option>
+					<option value="TE">Texas</option>
+					<option value="BC" selected>British Columbia</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="cidades">Cidade</label>
+				<select name="cidades" id="cidades">
+					<option value="RJ">Rio de Janeiro</option>
+					<option value="AL">Alabama</option>
+					<option value="VA" selected>Vancouver</option>
+				</select>
+			</div>
+
+			<div>
+				<button type="submit" class="btn btn-primary">Cadastrar</button>
+			</div>
+		</form>
+
+
+		<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+	</body>
+</html>
