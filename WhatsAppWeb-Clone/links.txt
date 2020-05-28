@@ -1,0 +1,2 @@
+https://us-central1-whatsapp-clone-16d37.cloudfunctions.net/helloWorld
+https://console.firebase.google.com/project/whatsapp-clone-16d37/overview
